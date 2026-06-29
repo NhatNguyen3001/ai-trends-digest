@@ -1,0 +1,7 @@
+# Core dependencies for AI Trends Digest
+# Pinned for reproducibility. Update deliberately, not accidentally.
+
+anthropic>=0.40,<1.0      # Official Anthropic (Claude) SDK
+python-dotenv>=1.0,<2.0   # Loads .env into the environment
+arxiv>=2.1,<3.0           # arXiv API client (Phase 1 collector)
+feedparser>=6.0,<7.0      # RSS/Atom parsing (news + newsletters collector)

@@ -1,0 +1,42 @@
+"""Central configuration.
+
+Every secret and tunable setting is read here, once, from the environment.
+The rest of the code imports from this module instead of touching ``os.environ``
+or hardcoding values. When we add Qdrant URLs, source lists, etc., they live here too.
+
+The golden rule: real secrets live in ``.env`` (git-ignored) and never in code.
+``load_dotenv()`` reads that file into the process environment at import time.
+"""
+
+import os
+
+from dotenv import load_dotenv
+
+# Read .env (if present) into os.environ. On a machine without a .env file
+# this is a no-op — real environment variables still work (useful in CI/prod).
+load_dotenv()
+
+# --- Anthropic (Claude) ---
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+
+# The model the app talks to. Default matches .env.example; override in .env.
+ANTHROPIC_MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-6")
+
+# --- GitHub (optional) ---
+# A token is OPTIONAL — it only raises the Search API rate limit. The GitHub
+# collector works fine without one (keyless limit is ~10 searches/min). If you
+# add one, a fine-grained token needs no scopes for public repository search.
+GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
+
+
+def require_api_key() -> str:
+    """Return the Anthropic API key, or fail loudly if it's missing.
+
+    Failing early with a clear message beats a confusing 401 from the API later.
+    """
+    if not ANTHROPIC_API_KEY:
+        raise RuntimeError(
+            "ANTHROPIC_API_KEY is not set. Copy .env.example to .env and "
+            "fill in your real key (get one at https://console.anthropic.com/)."
+        )
+    return ANTHROPIC_API_KEY
