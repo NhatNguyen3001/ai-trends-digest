@@ -33,3 +33,7 @@ class Item:
     # Filled by dedup: "source: url" of other items merged into this one as
     # duplicates (same story from another source). Empty when nothing merged.
     merged_sources: list[str] = field(default_factory=list)
+
+    # Filled by ranking (slice D): the blended 0-10 score and the one-line "why".
+    score: float = 0.0
+    score_reason: str = ""

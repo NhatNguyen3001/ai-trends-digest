@@ -47,6 +47,12 @@ MEMORY_DAYS = int(os.environ.get("MEMORY_DAYS", "14"))        # rolling window l
 CROSS_SUPPRESS = float(os.environ.get("CROSS_SUPPRESS", "0.93"))  # >= -> drop (old news)
 CROSS_UPDATE = float(os.environ.get("CROSS_UPDATE", "0.85"))      # >= -> mark "Update:"
 
+# --- Ranking (slice D) ---
+TOP_N = int(os.environ.get("TOP_N", "12"))            # items delivered after ranking
+W_SIGNIFICANCE = float(os.environ.get("W_SIGNIFICANCE", "0.5"))
+W_RELEVANCE = float(os.environ.get("W_RELEVANCE", "0.3"))
+W_NOVELTY = float(os.environ.get("W_NOVELTY", "0.2"))
+
 
 def require_api_key() -> str:
     """Return the Anthropic API key, or fail loudly if it's missing.

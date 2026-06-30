@@ -17,6 +17,7 @@ sys.path.insert(0, str(SRC))
 
 from digest.collectors import collect_all  # noqa: E402 (after path setup)
 from digest.curate import curate, remember_kept  # noqa: E402
+from digest.ranking import rank_items  # noqa: E402
 from digest.memory_store import get_store  # noqa: E402
 from digest.summarise import summarise_items  # noqa: E402
 from digest import config  # noqa: E402
@@ -40,9 +41,13 @@ def main() -> None:
 
     print(f"Collected {raw_count} items. Curating (dedup + cross-day memory)...")
     result = curate(items, store=store)
-    items = result.items
-    print(f"{raw_count} raw -> {len(items)} delivered "
+    curated = result.items
+    print(f"{raw_count} raw -> {len(curated)} curated "
           f"({result.suppressed} suppressed, {result.updated} marked Update). "
+          f"Ranking...")
+
+    items = rank_items(curated, top_n=config.TOP_N)
+    print(f"{len(curated)} curated -> {len(items)} delivered (top {config.TOP_N}). "
           f"Summarising with Claude...\n")
 
     summaries = summarise_items(items)
@@ -50,6 +55,7 @@ def main() -> None:
     print(f"# AI Trends Digest — {date.today():%Y-%m-%d}\n")
     for rank, (item, summary) in enumerate(zip(items, summaries), start=1):
         print(f"{rank}. [{item.source}] {item.title}")
+        print(f"   score {item.score:.1f} — {item.score_reason}")
         print(f"   {summary}")
         print(f"   {item.url}")
         if item.merged_sources:
