@@ -37,3 +37,6 @@ class Item:
     # Filled by ranking (slice D): the blended 0-10 score and the one-line "why".
     score: float = 0.0
     score_reason: str = ""
+
+    # Filled by the OpenReview tool (slice E): a one-line peer-review note for papers.
+    significance_note: str = ""
