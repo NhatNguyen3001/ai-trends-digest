@@ -141,34 +141,55 @@ def check_same_story(items, pairs, *, client_factory=get_client):
     return same
 
 
-def _merge_cluster(group: list[Item]) -> Item:
-    """Collapse a cluster to one canonical item (richest summary wins); the rest
-    are recorded in the survivor's merged_sources."""
-    canonical = max(group, key=lambda it: len(it.summary or ""))
-    for other in group:
-        if other is canonical:
+def _merge_cluster(items: list[Item], group: list[int]) -> tuple[Item, int]:
+    """Collapse a cluster (indices into ``items``) to its canonical item (richest
+    summary wins). Returns (canonical_item, canonical_index); the others are
+    recorded in the survivor's merged_sources."""
+    canonical_idx = max(group, key=lambda i: len(items[i].summary or ""))
+    canonical = items[canonical_idx]
+    for i in group:
+        if i == canonical_idx:
             continue
+        other = items[i]
         canonical.merged_sources.append(f"{other.source}: {other.url}")
         canonical.merged_sources.extend(other.merged_sources)
-    return canonical
+    return canonical, canonical_idx
 
 
-def dedup_within_day(items, *, embed_fn=embed_texts, same_story_fn=check_same_story):
-    """Exact then semantic de-duplication of one day's items."""
-    items = _exact_dedup(items)
+def dedup_within_day_with_vectors(items, vectors, *, same_story_fn=check_same_story):
+    """Semantic dedup on items that are already exact-deduped and embedded.
+
+    Returns (survivors, survivor_vectors): each cluster collapses to its canonical
+    item, and the canonical's vector is carried along so callers (curate) can reuse
+    it for cross-day search and write-back without re-embedding.
+    """
     if len(items) < 2:
-        return items
-
-    texts = [f"{it.title} {it.summary}".strip() for it in items]
-    vectors = embed_fn(texts)
-    if vectors is None:                        # embeddings unavailable -> exact only
-        return items
+        return items, vectors
 
     sim = _cosine_matrix(vectors)
     clusters = _semantic_clusters(
         len(items), sim, config.SIM_HIGH, config.SIM_LOW,
         gray_check=lambda pairs: same_story_fn(items, pairs),
     )
-    # Preserve original order by the smallest index in each cluster.
-    clusters.sort(key=min)
-    return [_merge_cluster([items[i] for i in group]) for group in clusters]
+    clusters.sort(key=min)                     # preserve original-ish order
+
+    kept_items: list[Item] = []
+    kept_vecs: list[list[float]] = []
+    for group in clusters:
+        item, idx = _merge_cluster(items, group)
+        kept_items.append(item)
+        kept_vecs.append(vectors[idx])
+    return kept_items, kept_vecs
+
+
+def dedup_within_day(items, *, embed_fn=embed_texts, same_story_fn=check_same_story):
+    """Exact then semantic de-duplication of one day's items (vectors discarded)."""
+    items = _exact_dedup(items)
+    if len(items) < 2:
+        return items
+    texts = [f"{it.title} {it.summary}".strip() for it in items]
+    vectors = embed_fn(texts)
+    if vectors is None:                        # embeddings unavailable -> exact only
+        return items
+    kept, _ = dedup_within_day_with_vectors(items, vectors, same_story_fn=same_story_fn)
+    return kept

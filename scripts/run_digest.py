@@ -16,8 +16,10 @@ SRC = Path(__file__).resolve().parent.parent / "src"
 sys.path.insert(0, str(SRC))
 
 from digest.collectors import collect_all  # noqa: E402 (after path setup)
-from digest.dedup import dedup_within_day  # noqa: E402
+from digest.curate import curate, remember_kept  # noqa: E402
+from digest.memory_store import get_store  # noqa: E402
 from digest.summarise import summarise_items  # noqa: E402
+from digest import config  # noqa: E402
 
 
 def main() -> None:
@@ -29,9 +31,19 @@ def main() -> None:
     items = collect_all()
     raw_count = len(items)
 
-    print(f"Collected {raw_count} items. De-duplicating...")
-    items = dedup_within_day(items)
-    print(f"{raw_count} raw -> {len(items)} after dedup. Summarising with Claude...\n")
+    # Open cross-day memory (best-effort: a store failure must not stop the digest).
+    try:
+        store = get_store(config.QDRANT_PATH)
+    except Exception as exc:  # noqa: BLE001
+        print(f"[run] memory unavailable ({exc}); running without cross-day.")
+        store = None
+
+    print(f"Collected {raw_count} items. Curating (dedup + cross-day memory)...")
+    result = curate(items, store=store)
+    items = result.items
+    print(f"{raw_count} raw -> {len(items)} delivered "
+          f"({result.suppressed} suppressed, {result.updated} marked Update). "
+          f"Summarising with Claude...\n")
 
     summaries = summarise_items(items)
 
@@ -43,6 +55,9 @@ def main() -> None:
         if item.merged_sources:
             print(f"   also covered by: {', '.join(item.merged_sources)}")
         print()
+
+    # Write today's survivors back to memory AFTER delivery, then prune.
+    remember_kept(result, store=store, run_date=date.today())
 
 
 if __name__ == "__main__":

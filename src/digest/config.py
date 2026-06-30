@@ -41,6 +41,12 @@ EMBED_DIM = 1024
 SIM_HIGH = float(os.environ.get("SIM_HIGH", "0.92"))
 SIM_LOW = float(os.environ.get("SIM_LOW", "0.82"))
 
+# --- Cross-day memory (Qdrant) ---
+QDRANT_PATH = os.environ.get("QDRANT_PATH", "./data/qdrant")  # embedded on-disk store
+MEMORY_DAYS = int(os.environ.get("MEMORY_DAYS", "14"))        # rolling window length
+CROSS_SUPPRESS = float(os.environ.get("CROSS_SUPPRESS", "0.93"))  # >= -> drop (old news)
+CROSS_UPDATE = float(os.environ.get("CROSS_UPDATE", "0.85"))      # >= -> mark "Update:"
+
 
 def require_api_key() -> str:
     """Return the Anthropic API key, or fail loudly if it's missing.
