@@ -35,3 +35,6 @@ data/
 .wolf/
 
 CLAUDE.md
+
+# --- Tests kept local for now (not published yet) ---
+tests/
