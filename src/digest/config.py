@@ -28,6 +28,19 @@ ANTHROPIC_MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-6")
 # add one, a fine-grained token needs no scopes for public repository search.
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
 
+# --- Voyage AI (embeddings) ---
+# Claude has no embeddings endpoint; Voyage is Anthropic's recommended partner.
+# Free tier covers the first 200M tokens. Get a key at https://www.voyageai.com/.
+VOYAGE_API_KEY = os.environ.get("VOYAGE_API_KEY", "")
+VOYAGE_MODEL = os.environ.get("VOYAGE_MODEL", "voyage-3.5")  # 1024-dim default
+EMBED_DIM = 1024
+
+# --- Dedup similarity thresholds (cosine) ---
+# >= HIGH: clearly the same story (auto-merge). [LOW, HIGH): ask the LLM.
+# < LOW: distinct. Empirical starting points; tune against real merges.
+SIM_HIGH = float(os.environ.get("SIM_HIGH", "0.92"))
+SIM_LOW = float(os.environ.get("SIM_LOW", "0.82"))
+
 
 def require_api_key() -> str:
     """Return the Anthropic API key, or fail loudly if it's missing.

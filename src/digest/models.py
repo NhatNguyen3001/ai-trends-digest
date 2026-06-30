@@ -29,3 +29,7 @@ class Item:
     # rather than `authors: list[str] = []` because a bare [] would be shared
     # across every Item instance — a classic Python mutable-default bug.
     authors: list[str] = field(default_factory=list)
+
+    # Filled by dedup: "source: url" of other items merged into this one as
+    # duplicates (same story from another source). Empty when nothing merged.
+    merged_sources: list[str] = field(default_factory=list)

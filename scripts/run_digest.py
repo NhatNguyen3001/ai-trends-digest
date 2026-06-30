@@ -16,6 +16,7 @@ SRC = Path(__file__).resolve().parent.parent / "src"
 sys.path.insert(0, str(SRC))
 
 from digest.collectors import collect_all  # noqa: E402 (after path setup)
+from digest.dedup import dedup_within_day  # noqa: E402
 from digest.summarise import summarise_items  # noqa: E402
 
 
@@ -26,7 +27,11 @@ def main() -> None:
 
     print("Collecting from all sources (arXiv, RSS, Anthropic, GitHub)...")
     items = collect_all()
-    print(f"Collected {len(items)} items total. Summarising with Claude...\n")
+    raw_count = len(items)
+
+    print(f"Collected {raw_count} items. De-duplicating...")
+    items = dedup_within_day(items)
+    print(f"{raw_count} raw -> {len(items)} after dedup. Summarising with Claude...\n")
 
     summaries = summarise_items(items)
 
@@ -34,7 +39,10 @@ def main() -> None:
     for rank, (item, summary) in enumerate(zip(items, summaries), start=1):
         print(f"{rank}. [{item.source}] {item.title}")
         print(f"   {summary}")
-        print(f"   {item.url}\n")
+        print(f"   {item.url}")
+        if item.merged_sources:
+            print(f"   also covered by: {', '.join(item.merged_sources)}")
+        print()
 
 
 if __name__ == "__main__":

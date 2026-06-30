@@ -1,0 +1,37 @@
+"""Turn text into vectors with Voyage AI.
+
+One 1024-dim vector per input string, batched to keep round-trips low. Soft-fail:
+any error returns None, and the caller falls back to exact-only dedup. The Voyage
+client reads VOYAGE_API_KEY from the environment (loaded by config).
+"""
+
+import sys
+
+import voyageai
+
+from digest import config
+
+_BATCH = 128  # Voyage's recommended max texts per request
+
+
+def embed_texts(texts: list[str]) -> list[list[float]] | None:
+    """Embed ``texts`` as documents. Returns one vector per text, or None on error."""
+    if not texts:
+        return []
+    if not config.VOYAGE_API_KEY:
+        print("[embeddings] VOYAGE_API_KEY not set; skipping semantic dedup.",
+              file=sys.stderr)
+        return None
+    try:
+        client = voyageai.Client(api_key=config.VOYAGE_API_KEY)
+        vectors: list[list[float]] = []
+        for i in range(0, len(texts), _BATCH):
+            batch = texts[i:i + _BATCH]
+            result = client.embed(batch, model=config.VOYAGE_MODEL,
+                                  input_type="document")
+            vectors.extend(result.embeddings)
+        return vectors
+    except Exception as exc:  # noqa: BLE001 — soft-fail by design
+        print(f"[embeddings] Voyage call failed ({exc}); skipping semantic dedup.",
+              file=sys.stderr)
+        return None
