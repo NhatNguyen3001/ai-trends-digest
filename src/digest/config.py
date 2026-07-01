@@ -53,6 +53,9 @@ W_SIGNIFICANCE = float(os.environ.get("W_SIGNIFICANCE", "0.5"))
 W_RELEVANCE = float(os.environ.get("W_RELEVANCE", "0.3"))
 W_NOVELTY = float(os.environ.get("W_NOVELTY", "0.2"))
 
+# --- Digest assembly (Phase 4) ---
+DIGEST_DIR = os.environ.get("DIGEST_DIR", "./digests")   # where daily .md files are written
+
 
 def require_api_key() -> str:
     """Return the Anthropic API key, or fail loudly if it's missing.

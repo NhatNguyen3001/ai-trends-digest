@@ -28,8 +28,9 @@ Thumbs.db
 .idea/
 .vscode/
 
-# --- Local runtime state (Qdrant embedded store, etc.) ---
+# --- Local runtime state (Qdrant embedded store, digests, etc.) ---
 data/
+digests/
 
 .claude/
 .wolf/
