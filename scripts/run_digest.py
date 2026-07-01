@@ -19,6 +19,7 @@ from digest.collectors import collect_all  # noqa: E402 (after path setup)
 from digest.curate import curate, remember_kept  # noqa: E402
 from digest.ranking import rank_items  # noqa: E402
 from digest.significance import enrich_significance  # noqa: E402
+from digest.tagging import tag_items, build_tag_index  # noqa: E402
 from digest.memory_store import get_store  # noqa: E402
 from digest.summarise import summarise_items  # noqa: E402
 from digest import config  # noqa: E402
@@ -52,6 +53,9 @@ def main() -> None:
           f"Checking OpenReview for papers...")
     enrich_significance(items)
 
+    print("Tagging items for cross-reference...")
+    tag_items(items)
+
     print("Summarising with Claude...\n")
     summaries = summarise_items(items)
 
@@ -61,10 +65,21 @@ def main() -> None:
         print(f"   score {item.score:.1f} — {item.score_reason}")
         if item.significance_note:
             print(f"   significance: {item.significance_note}")
+        if item.tags:
+            print(f"   tags: "
+                  + ", ".join(f"{t.name} ({t.type})" for t in item.tags))
         print(f"   {summary}")
         print(f"   {item.url}")
         if item.merged_sources:
             print(f"   also covered by: {', '.join(item.merged_sources)}")
+        print()
+
+    tag_index = build_tag_index(items)
+    if tag_index:
+        print("## Related by tag\n")
+        for (type_, name), ranks in tag_index.items():
+            joined = ", ".join(f"#{r}" for r in ranks)
+            print(f"- {name} ({type_}): {joined}")
         print()
 
     # Write today's survivors back to memory AFTER delivery, then prune.

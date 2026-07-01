@@ -15,6 +15,17 @@ from datetime import datetime
 
 
 @dataclass
+class Tag:
+    """A typed entity/topic extracted from an item, for cross-reference grouping.
+
+    ``type`` is one of: "model", "org", "technique", "dataset", "task".
+    """
+
+    name: str
+    type: str
+
+
+@dataclass
 class Item:
     """One normalised thing the digest knows about (a paper, repo, article...)."""
 
@@ -40,3 +51,6 @@ class Item:
 
     # Filled by the OpenReview tool (slice E): a one-line peer-review note for papers.
     significance_note: str = ""
+
+    # Filled by tagging (slice F): typed entities for cross-reference grouping.
+    tags: list[Tag] = field(default_factory=list)
