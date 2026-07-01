@@ -48,10 +48,18 @@ CROSS_SUPPRESS = float(os.environ.get("CROSS_SUPPRESS", "0.93"))  # >= -> drop (
 CROSS_UPDATE = float(os.environ.get("CROSS_UPDATE", "0.85"))      # >= -> mark "Update:"
 
 # --- Ranking (slice D) ---
-TOP_N = int(os.environ.get("TOP_N", "12"))            # items delivered after ranking
+TOP_N = int(os.environ.get("TOP_N", "20"))            # max items delivered (a ceiling, not a quota)
 W_SIGNIFICANCE = float(os.environ.get("W_SIGNIFICANCE", "0.5"))
 W_RELEVANCE = float(os.environ.get("W_RELEVANCE", "0.3"))
 W_NOVELTY = float(os.environ.get("W_NOVELTY", "0.2"))
+
+# --- Delivery balancing (Phase 4.5) ---
+# Per-source-type caps stop any one bucket (papers especially) from dominating the
+# top-N, and the score floor keeps below-bar filler out (so TOP_N is a ceiling).
+CAP_PAPER = int(os.environ.get("CAP_PAPER", "8"))     # arXiv
+CAP_REPO = int(os.environ.get("CAP_REPO", "8"))       # GitHub
+CAP_NEWS = int(os.environ.get("CAP_NEWS", "10"))      # RSS + Anthropic scrapers
+SCORE_FLOOR = float(os.environ.get("SCORE_FLOOR", "4.0"))  # min blended score to deliver
 
 # --- Digest assembly (Phase 4) ---
 DIGEST_DIR = os.environ.get("DIGEST_DIR", "./digests")   # where daily .md files are written

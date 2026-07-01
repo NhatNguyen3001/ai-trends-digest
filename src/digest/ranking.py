@@ -40,6 +40,38 @@ def _blend(significance: int, novelty: int, relevance: int) -> float:
             + config.W_NOVELTY * novelty)
 
 
+def _category(item: Item) -> str:
+    """Bucket an item by source for the delivery caps: paper / repo / news."""
+    if item.source == "arxiv":
+        return "paper"
+    if item.source == "GitHub":
+        return "repo"
+    return "news"                       # RSS feeds + both Anthropic scrapers (BAIR too)
+
+
+def _select(items, *, top_n, caps, floor):
+    """Pick the delivered items from a score-sorted list (highest first).
+
+    Walk the list keeping each item unless it falls below ``floor`` or its
+    category is already at its cap; stop at ``top_n``. Because the caps bind
+    before the total does, papers can't crowd out repos/news — the next-best
+    item of an un-full category takes the slot instead. A category with fewer
+    than its cap simply yields fewer items (no filler)."""
+    counts: dict[str, int] = {}
+    out: list[Item] = []
+    for it in items:
+        if it.score < floor:
+            continue
+        cat = _category(it)
+        if counts.get(cat, 0) >= caps.get(cat, top_n):
+            continue
+        out.append(it)
+        counts[cat] = counts.get(cat, 0) + 1
+        if len(out) >= top_n:
+            break
+    return out
+
+
 SYSTEM = (
     "You rank AI news, papers, and tools for a daily digest read by an AI engineer "
     "who follows LLMs, agents, and RAG. Score how much each item deserves their "
@@ -70,10 +102,14 @@ def _score(items, client_factory) -> Ranking:
     return response.parsed_output
 
 
-def rank_items(items, *, top_n=None, client_factory=get_client):
-    """Score items, set item.score/score_reason, return the top-N sorted by score.
+def rank_items(items, *, top_n=None, caps=None, floor=None, client_factory=get_client):
+    """Score items, set item.score/score_reason, return the delivered selection.
 
-    Soft-fail: any error returns the items unchanged (unranked, unfiltered)."""
+    After scoring, delivery is balanced: sort by blended score, drop anything
+    below ``floor``, and cap each source-type (paper/repo/news) so no bucket
+    dominates — up to a ``top_n`` ceiling (see ``_select``). Defaults come from
+    config. Soft-fail: any scoring error returns the items unchanged (unranked,
+    unfiltered) so the digest still ships."""
     if not items:
         return []
 
@@ -95,5 +131,10 @@ def rank_items(items, *, top_n=None, client_factory=get_client):
                               _clamp(s.relevance))
             it.score_reason = s.reason
 
+    top_n = top_n if top_n is not None else config.TOP_N
+    floor = floor if floor is not None else config.SCORE_FLOOR
+    caps = caps if caps is not None else {
+        "paper": config.CAP_PAPER, "repo": config.CAP_REPO, "news": config.CAP_NEWS}
+
     ranked = sorted(items, key=lambda it: it.score, reverse=True)
-    return ranked[:top_n] if top_n else ranked
+    return _select(ranked, top_n=top_n, caps=caps, floor=floor)

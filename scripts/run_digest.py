@@ -50,7 +50,8 @@ def main() -> None:
           f"Ranking...")
 
     items = rank_items(curated, top_n=config.TOP_N)
-    print(f"{len(curated)} curated -> {len(items)} delivered (top {config.TOP_N}). "
+    print(f"{len(curated)} curated -> {len(items)} delivered "
+          f"(<={config.TOP_N}, capped by source-type + score floor {config.SCORE_FLOOR}). "
           f"Checking OpenReview for papers...")
     enrich_significance(items)
 
