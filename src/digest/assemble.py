@@ -107,10 +107,15 @@ def render_digest(items: list[Item], summaries: list[str], run_date: date,
     return "\n\n".join(parts) + "\n"
 
 
-def write_digest_file(markdown: str, run_date: date, out_dir=None) -> Path:
-    """Write the digest to <out_dir>/YYYY-MM-DD.md (utf-8); return the Path."""
+def write_digest_file(markdown: str, run_dt, out_dir=None) -> Path:
+    """Write the digest to <out_dir>/YYYY-MM-DD_HH-MM-SS.md (utf-8); return the Path.
+
+    ``run_dt`` is the run's ``datetime`` — the time is in the filename so two runs on
+    the same day each get their own file instead of overwriting. (A plain ``date``
+    also works; its time renders as 00-00-00.)
+    """
     directory = Path(out_dir if out_dir is not None else config.DIGEST_DIR)
     directory.mkdir(parents=True, exist_ok=True)
-    path = directory / f"{run_date:%Y-%m-%d}.md"
+    path = directory / f"{run_dt:%Y-%m-%d_%H-%M-%S}.md"
     path.write_text(markdown, encoding="utf-8")
     return path

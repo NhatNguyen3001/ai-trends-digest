@@ -7,7 +7,7 @@ through the LLM to a printed digest. No ranking, dedup, or async yet.
 """
 
 import sys
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 
 # src-layout shim (same as scripts/hello.py): put src/ on the import path so we
@@ -60,13 +60,14 @@ def main() -> None:
     print("Summarising with Claude...\n")
     summaries = summarise_items(items)
 
+    run_dt = datetime.now()
     print("Writing the day's intro...\n")
     intro = write_intro(items)
-    markdown = render_digest(items, summaries, date.today(), intro)
+    markdown = render_digest(items, summaries, run_dt, intro)
     print(markdown)
 
     try:
-        path = write_digest_file(markdown, date.today())
+        path = write_digest_file(markdown, run_dt)
         print(f"wrote {path}")
     except Exception as exc:  # noqa: BLE001 — digest already printed; don't lose the run
         print(f"[run] could not write digest file ({exc}); printed above only.",
