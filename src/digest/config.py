@@ -27,6 +27,9 @@ ANTHROPIC_MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-6")
 # collector works fine without one (keyless limit is ~10 searches/min). If you
 # add one, a fine-grained token needs no scopes for public repository search.
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
+# "GitHub Active" lens: established repos (>= this many stars) pushed within N days.
+GITHUB_ACTIVE_DAYS = int(os.environ.get("GITHUB_ACTIVE_DAYS", "14"))
+GITHUB_MIN_STARS = int(os.environ.get("GITHUB_MIN_STARS", "5000"))
 
 # --- Voyage AI (embeddings) ---
 # Claude has no embeddings endpoint; Voyage is Anthropic's recommended partner.
@@ -56,9 +59,10 @@ W_NOVELTY = float(os.environ.get("W_NOVELTY", "0.2"))
 # --- Delivery balancing (Phase 4.5) ---
 # Per-source-type caps stop any one bucket (papers especially) from dominating the
 # top-N, and the score floor keeps below-bar filler out (so TOP_N is a ceiling).
-CAP_PAPER = int(os.environ.get("CAP_PAPER", "8"))     # arXiv
-CAP_REPO = int(os.environ.get("CAP_REPO", "8"))       # GitHub
-CAP_NEWS = int(os.environ.get("CAP_NEWS", "10"))      # RSS + Anthropic scrapers
+CAP_PAPER = int(os.environ.get("CAP_PAPER", "8"))               # arXiv
+CAP_REPO_TRENDING = int(os.environ.get("CAP_REPO_TRENDING", "5"))  # GitHub (trending)
+CAP_REPO_ACTIVE = int(os.environ.get("CAP_REPO_ACTIVE", "3"))      # GitHub Active (established)
+CAP_NEWS = int(os.environ.get("CAP_NEWS", "10"))                # RSS + Anthropic scrapers
 SCORE_FLOOR = float(os.environ.get("SCORE_FLOOR", "4.0"))  # min blended score to deliver
 
 # --- Digest assembly (Phase 4) ---

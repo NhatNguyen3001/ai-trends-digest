@@ -41,11 +41,17 @@ def _blend(significance: int, novelty: int, relevance: int) -> float:
 
 
 def _category(item: Item) -> str:
-    """Bucket an item by source for the delivery caps: paper / repo / news."""
+    """Bucket an item by source for the delivery caps.
+
+    Repos split by lens — trending (`GitHub`) vs established+active (`GitHub
+    Active`) — so each is guaranteed its own share of the repo budget (5/3).
+    """
     if item.source == "arxiv":
         return "paper"
     if item.source == "GitHub":
-        return "repo"
+        return "repo_trending"
+    if item.source == "GitHub Active":
+        return "repo_active"
     return "news"                       # RSS feeds + both Anthropic scrapers (BAIR too)
 
 
@@ -134,7 +140,10 @@ def rank_items(items, *, top_n=None, caps=None, floor=None, client_factory=get_c
     top_n = top_n if top_n is not None else config.TOP_N
     floor = floor if floor is not None else config.SCORE_FLOOR
     caps = caps if caps is not None else {
-        "paper": config.CAP_PAPER, "repo": config.CAP_REPO, "news": config.CAP_NEWS}
+        "paper": config.CAP_PAPER,
+        "repo_trending": config.CAP_REPO_TRENDING,
+        "repo_active": config.CAP_REPO_ACTIVE,
+        "news": config.CAP_NEWS}
 
     ranked = sorted(items, key=lambda it: it.score, reverse=True)
     return _select(ranked, top_n=top_n, caps=caps, floor=floor)

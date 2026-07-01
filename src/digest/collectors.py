@@ -23,7 +23,7 @@ from digest.models import Item
 from digest.sources.anthropic_source import fetch_anthropic
 from digest.sources.anthropic_news_source import fetch_anthropic_news
 from digest.sources.arxiv_source import fetch_arxiv
-from digest.sources.github_source import fetch_github
+from digest.sources.github_source import fetch_github, fetch_github_active
 from digest.sources.rss_source import fetch_rss
 
 # Source name -> a zero-arg callable returning list[Item]. Per-source counts are
@@ -34,6 +34,7 @@ COLLECTORS: dict[str, Callable[[], list[Item]]] = {
     "anthropic": lambda: fetch_anthropic(max_results=4),
     "anthropic_news": lambda: fetch_anthropic_news(max_results=4),
     "github": lambda: fetch_github(max_results=6),
+    "github_active": lambda: fetch_github_active(max_results=6),
 }
 
 

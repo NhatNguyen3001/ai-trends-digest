@@ -42,9 +42,13 @@ def _headers() -> dict[str, str]:
     return headers
 
 
-def _search(topic: str, since: str, per_page: int) -> list[dict]:
-    """Run one Search API query: repos in `topic` created since `since`, by stars."""
-    query = f"topic:{topic} created:>{since}"
+def _search(topic: str, qualifiers: str, per_page: int) -> list[dict]:
+    """Run one Search API query: repos in `topic` matching `qualifiers`, by stars.
+
+    `qualifiers` is the extra query text after the topic, e.g. "created:>2026-06-01"
+    (trending) or "pushed:>2026-06-18 stars:>5000" (established + active).
+    """
+    query = f"topic:{topic} {qualifiers}"
     params = urllib.parse.urlencode(
         {"q": query, "sort": "stars", "order": "desc", "per_page": per_page}
     )
@@ -61,25 +65,30 @@ def _parse_dt(value: str | None) -> datetime:
         return datetime.now(timezone.utc)
 
 
-def fetch_github(
-    topics: list[str] | None = None,
-    max_results: int = 10,
-    days: int = 30,
+def _since(days: int) -> str:
+    """A GitHub date qualifier value: `days` ago, as YYYY-MM-DD (UTC)."""
+    return (datetime.now(timezone.utc) - timedelta(days=days)).strftime("%Y-%m-%d")
+
+
+def _collect(
+    topics: list[str],
+    max_results: int,
+    qualifiers: str,
+    *,
+    source: str,
 ) -> list[Item]:
-    """Return recently-created, highly-starred AI repos as normalised ``Item``s.
+    """Shared core for both GitHub lenses: query each topic with `qualifiers`,
+    merge/de-dupe by repo full name, keep the most-starred, and normalise into
+    ``Item``s labelled `source`.
 
     Soft-fails: if every topic search errors (e.g. rate-limited), returns [] with
     a warning rather than raising, so one bad source can't break the digest.
     """
-    if topics is None:
-        topics = DEFAULT_TOPICS
-    since = (datetime.now(timezone.utc) - timedelta(days=days)).strftime("%Y-%m-%d")
-
     # Merge results across topics, de-duplicating by repo full name.
     by_name: dict[str, dict] = {}
     for topic in topics:
         try:
-            repos = _search(topic, since, per_page=max_results)
+            repos = _search(topic, qualifiers, per_page=max_results)
         except Exception as exc:
             _warn(f"search for topic:{topic} failed ({type(exc).__name__}: {exc})")
             continue
@@ -101,7 +110,7 @@ def fetch_github(
         description = repo.get("description") or "(no description)"
         items.append(
             Item(
-                source="GitHub",
+                source=source,
                 id=repo["full_name"],          # "owner/name" — stable id
                 title=repo["full_name"],
                 url=repo["html_url"],
@@ -113,3 +122,35 @@ def fetch_github(
             )
         )
     return items
+
+
+def fetch_github(
+    topics: list[str] | None = None,
+    max_results: int = 10,
+    days: int = 30,
+) -> list[Item]:
+    """Trending lens: recently-*created*, highly-starred AI repos.
+
+    A repo that's both new *and* highly starred is a good "trending in AI" proxy.
+    """
+    qualifiers = f"created:>{_since(days)}"
+    return _collect(topics or DEFAULT_TOPICS, max_results, qualifiers, source="GitHub")
+
+
+def fetch_github_active(
+    topics: list[str] | None = None,
+    max_results: int = 10,
+    days: int | None = None,
+    min_stars: int | None = None,
+) -> list[Item]:
+    """Established + active lens: big AI repos (>= `min_stars`) *pushed* recently.
+
+    Complements ``fetch_github``: `pushed:>` admits mature projects regardless of
+    age, and the star floor keeps it to established names. Labelled "GitHub Active"
+    so the digest can distinguish it from trending; both bucket as repos downstream.
+    """
+    days = days if days is not None else config.GITHUB_ACTIVE_DAYS
+    min_stars = min_stars if min_stars is not None else config.GITHUB_MIN_STARS
+    qualifiers = f"pushed:>{_since(days)} stars:>{min_stars}"
+    return _collect(topics or DEFAULT_TOPICS, max_results, qualifiers,
+                    source="GitHub Active")
