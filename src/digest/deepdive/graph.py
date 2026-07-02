@@ -1,13 +1,15 @@
 """Assemble the deep-dive nodes into a compiled LangGraph.
 
-Slice 2 adds the CRAG loop:
-    decompose -> retrieve -> grade -> (route)
-                                       |-> correct -> retrieve   (weak, budget left)
-                                       |-> synthesise -> END      (enough, or budget spent)
+Slice 2 adds the CRAG loop; slice 3 adds the Self-RAG reflect loop:
+    decompose -> retrieve -> grade -> (route_after_grade)
+                              ^        |-> correct -> retrieve   (weak, budget left)
+                              |        |-> synthesise -> reflect -> (route_after_reflect)
+                              |                                      |-> retrieve  (weak, budget left)
+                              +--------------------------------------|-> END       (good, or budget spent)
 
-The router (`route_after_grade`) is where the budget/early-exit controller lives:
-it forces the graph forward once the search/iteration caps are hit so the cycle
-can never spin forever.
+Both routers (`route_after_grade`, `route_after_reflect`) are where the budget/
+early-exit controller lives: they force the graph forward once the search/iteration
+caps are hit so neither cycle can spin forever.
 
 ``build_graph`` takes the ``client_factory``/``search_fn`` seams so tests build a
 graph wired to fakes — the compiled graph never reaches for the network or a key.
@@ -36,6 +38,23 @@ def route_after_grade(state) -> str:
     return "correct"
 
 
+def _budget_spent(state) -> bool:
+    return (state["searches_used"] >= config.DEEP_DIVE_MAX_SEARCHES
+            or state["iterations"] >= config.DEEP_DIVE_MAX_ITERS)
+
+
+def route_after_reflect(state) -> str:
+    """Decide where to go after self-critique: finish, or research once more.
+
+    - Draft judged solid (`good`) -> END.
+    - Out of budget              -> END (early-exit).
+    - Otherwise                  -> retrieve (one more bounded pass).
+    """
+    if state["good"] or _budget_spent(state):
+        return "END"
+    return "retrieve"
+
+
 def build_graph(*, client_factory=get_client, search_fn=web_search):
     """Wire and compile the deep-dive graph (with the CRAG grade/correct loop)."""
     g = StateGraph(DeepDiveState)
@@ -44,6 +63,7 @@ def build_graph(*, client_factory=get_client, search_fn=web_search):
     g.add_node("grade", nodes.make_grade(client_factory))
     g.add_node("correct", nodes.make_correct(client_factory))
     g.add_node("synthesise", nodes.make_synthesise(client_factory))
+    g.add_node("reflect", nodes.make_reflect(client_factory))
 
     g.add_edge(START, "decompose")
     g.add_edge("decompose", "retrieve")
@@ -51,5 +71,7 @@ def build_graph(*, client_factory=get_client, search_fn=web_search):
     g.add_conditional_edges("grade", route_after_grade,
                             {"correct": "correct", "synthesise": "synthesise"})
     g.add_edge("correct", "retrieve")
-    g.add_edge("synthesise", END)
+    g.add_edge("synthesise", "reflect")
+    g.add_conditional_edges("reflect", route_after_reflect,
+                            {"retrieve": "retrieve", "END": END})
     return g.compile()

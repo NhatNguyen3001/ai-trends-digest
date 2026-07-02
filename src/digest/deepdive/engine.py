@@ -23,6 +23,7 @@ def _initial_state(item: Item) -> dict:
         "searches_used": 0,
         "iterations": 0,
         "enough": False,
+        "good": False,
     }
 
 

@@ -137,6 +137,32 @@ def make_correct(client_factory):
     return correct
 
 
+_REFLECT_SYSTEM = (
+    "You are a strict reviewer of a research write-up. Judge whether its claims are "
+    "well supported by cited sources and whether it actually answers the topic. "
+    "Reply with ONLY one word: 'good' if it is solid, or 'weak' if it needs more "
+    "research. No other text."
+)
+
+
+def make_reflect(client_factory):
+    """Node (Self-RAG): critique the draft; ``good`` gates one more research pass.
+
+    Increments ``iterations`` (shared budget counter with ``correct``) so the
+    reflect loop is bounded by the same caps.
+    """
+    def reflect(state) -> dict:
+        user = (
+            f"Topic: {state['item'].title}\n\n"
+            f"Draft:\n{state['draft']}\n\n"
+            "Is this good or weak?"
+        )
+        text = _ask(client_factory, _REFLECT_SYSTEM, user, max_tokens=50)
+        good = text.strip().lower().startswith("good")
+        return {"good": good, "iterations": state["iterations"] + 1}
+    return reflect
+
+
 def make_synthesise(client_factory):
     """Node: turn the (graded) docs into the cited write-up."""
     def synthesise(state) -> dict:
