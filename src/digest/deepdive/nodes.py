@@ -77,6 +77,20 @@ def _format_docs(docs: list[dict]) -> str:
     )
 
 
+def abstract_doc(item) -> dict | None:
+    """The item's *own* text (for arXiv: the abstract) as a citable source.
+
+    Seeding retrieval with this guarantees the write-up is grounded on the real
+    paper, not just whatever the web search happened to surface — a same-day
+    preprint often isn't crawlable yet, so an unseeded search can drift onto an
+    adjacent older paper. ``None`` when the item carries no usable text.
+    """
+    text = (item.summary or "").strip()
+    if not text:
+        return None
+    return {"title": item.title, "url": item.url, "text": text}
+
+
 _GRADE_SYSTEM = (
     "You judge whether each retrieved source is actually relevant and useful for "
     "writing about the topic. Reply with ONLY a JSON object mapping each source's "
@@ -167,8 +181,13 @@ def make_synthesise(client_factory):
     """Node: turn the (graded) docs into the cited write-up."""
     def synthesise(state) -> dict:
         # Prefer graded docs (slice 2+); before grading exists, fall back to all docs.
-        docs = state["graded_docs"] or state["docs"]
         item = state["item"]
+        docs = state["graded_docs"] or state["docs"]
+        # Always ground on the paper itself, even if grading dropped its abstract
+        # (or the web returned nothing) — this is what keeps the write-up on-topic.
+        seed = abstract_doc(item)
+        if seed and seed not in docs:
+            docs = [seed] + docs
         user = (
             f"Topic: {item.title}\n\n"
             f"Sources:\n{_format_docs(docs)}\n\n"

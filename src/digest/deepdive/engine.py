@@ -7,17 +7,23 @@ blow-up — soft-fails to ``""`` so the digest is never lost to a bad deep-dive.
 import sys
 
 from digest.deepdive.graph import build_graph
+from digest.deepdive.nodes import abstract_doc
 from digest.deepdive.search import web_search
 from digest.llm import get_client
 from digest.models import Item
 
 
 def _initial_state(item: Item) -> dict:
-    """A clean starting state: the item plus empty accumulators and zeroed budget."""
+    """A clean starting state: the item plus empty accumulators and zeroed budget.
+
+    ``docs`` is pre-seeded with the item's own abstract (when it has one) so the
+    engine always holds the real paper before any web search runs.
+    """
+    seed = abstract_doc(item)
     return {
         "item": item,
         "subquestions": [],
-        "docs": [],
+        "docs": [seed] if seed else [],
         "graded_docs": [],
         "draft": "",
         "searches_used": 0,
