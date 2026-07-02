@@ -68,6 +68,14 @@ SCORE_FLOOR = float(os.environ.get("SCORE_FLOOR", "4.0"))  # min blended score t
 # --- Digest assembly (Phase 4) ---
 DIGEST_DIR = os.environ.get("DIGEST_DIR", "./digests")   # where daily .md files are written
 
+# --- Deep-dive engine (Phase 5) ---
+# Tavily is a soft dependency: blank key -> a deep-dive degrades to "" (the digest
+# still renders). The two caps bound the corrective/reflective loops (budget/early-exit).
+TAVILY_API_KEY = os.environ.get("TAVILY_API_KEY", "")
+DEEP_DIVE_SUBQUESTIONS = int(os.environ.get("DEEP_DIVE_SUBQUESTIONS", "3"))
+DEEP_DIVE_MAX_SEARCHES = int(os.environ.get("DEEP_DIVE_MAX_SEARCHES", "6"))
+DEEP_DIVE_MAX_ITERS = int(os.environ.get("DEEP_DIVE_MAX_ITERS", "3"))
+
 
 def require_api_key() -> str:
     """Return the Anthropic API key, or fail loudly if it's missing.

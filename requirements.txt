@@ -9,6 +9,8 @@ voyageai>=0.3,<1.0        # Embeddings for semantic dedup (Phase 3)
 numpy>=1.26,<3.0          # Cosine-similarity matrix for dedup clustering (Phase 3)
 qdrant-client>=1.12,<2.0  # Embedded vector store for cross-day memory (Phase 3 C)
 pydantic>=2.0,<3.0        # Structured-output schema for ranking (Phase 3 D)
+langgraph>=0.2,<1.0       # Graph orchestration for the deep-dive engine (Phase 5)
+tavily-python>=0.5,<1.0   # Web-search API for the deep-dive retrieval (Phase 5)
 
 # --- Dev / test ---
 pytest>=8.0,<10.0         # Test runner (Phase 3: first tests in the project)

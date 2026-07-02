@@ -54,3 +54,6 @@ class Item:
 
     # Filled by tagging (slice F): typed entities for cross-reference grouping.
     tags: list[Tag] = field(default_factory=list)
+
+    # Filled by the deep-dive engine (Phase 5): a cited, web-researched write-up.
+    deep_dive: str = ""

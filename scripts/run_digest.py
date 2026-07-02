@@ -20,7 +20,9 @@ from digest.curate import curate, remember_kept  # noqa: E402
 from digest.ranking import rank_items  # noqa: E402
 from digest.significance import enrich_significance  # noqa: E402
 from digest.tagging import tag_items  # noqa: E402
-from digest.assemble import write_intro, render_digest, write_digest_file  # noqa: E402
+from digest.assemble import (  # noqa: E402
+    write_intro, render_digest, write_digest_file, save_digest_data,
+)
 from digest.memory_store import get_store  # noqa: E402
 from digest.summarise import summarise_items  # noqa: E402
 from digest import config  # noqa: E402
@@ -70,6 +72,9 @@ def main() -> None:
     try:
         path = write_digest_file(markdown, run_dt)
         print(f"wrote {path}")
+        # Sidecar: the render inputs, so `scripts/deep_dive.py` can deepen an item
+        # later without re-running the pipeline. Best-effort — never lose the run.
+        save_digest_data(path.with_suffix(".json"), items, summaries, intro, run_dt)
     except Exception as exc:  # noqa: BLE001 — digest already printed; don't lose the run
         print(f"[run] could not write digest file ({exc}); printed above only.",
               file=sys.stderr)

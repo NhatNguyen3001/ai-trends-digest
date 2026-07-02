@@ -13,13 +13,14 @@ judgment (score + reason, significance, tags) for transparency. The "Related by 
 section reuses slice F's ``build_tag_index`` rather than re-deriving grouping.
 """
 
+import json
 import sys
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 
 from digest import config
 from digest.llm import get_client
-from digest.models import Item
+from digest.models import Item, Tag
 from digest.tagging import build_tag_index
 
 
@@ -77,6 +78,11 @@ def _item_block(rank: int, item: Item, summary: str) -> str:
         lines.append(f"tags: {tags}")
     lines.append("")
     lines.append(summary)
+    if item.deep_dive:
+        lines.append("")
+        lines.append("**Deep dive**")
+        lines.append("")
+        lines.append(item.deep_dive)
     if item.merged_sources:
         lines.append("")
         lines.append(f"also covered by: {', '.join(item.merged_sources)}")
@@ -105,6 +111,75 @@ def render_digest(items: list[Item], summaries: list[str], run_date: date,
         parts.append("\n".join(lines))
 
     return "\n\n".join(parts) + "\n"
+
+
+def _item_to_dict(item: Item) -> dict:
+    """Serialise an Item to a JSON-safe dict (datetime -> isoformat, Tags -> dicts)."""
+    return {
+        "source": item.source,
+        "id": item.id,
+        "title": item.title,
+        "url": item.url,
+        "published": item.published.isoformat(),
+        "summary": item.summary,
+        "authors": list(item.authors),
+        "merged_sources": list(item.merged_sources),
+        "score": item.score,
+        "score_reason": item.score_reason,
+        "significance_note": item.significance_note,
+        "tags": [{"name": t.name, "type": t.type} for t in item.tags],
+        "deep_dive": item.deep_dive,
+    }
+
+
+def _item_from_dict(d: dict) -> Item:
+    """Rebuild an Item from ``_item_to_dict`` output."""
+    return Item(
+        source=d["source"],
+        id=d["id"],
+        title=d["title"],
+        url=d["url"],
+        published=datetime.fromisoformat(d["published"]),
+        summary=d["summary"],
+        authors=list(d.get("authors", [])),
+        merged_sources=list(d.get("merged_sources", [])),
+        score=d.get("score", 0.0),
+        score_reason=d.get("score_reason", ""),
+        significance_note=d.get("significance_note", ""),
+        tags=[Tag(name=t["name"], type=t["type"]) for t in d.get("tags", [])],
+        deep_dive=d.get("deep_dive", ""),
+    )
+
+
+def save_digest_data(path, items: list[Item], summaries, intro: str, run_dt) -> None:
+    """Write a JSON sidecar of everything the digest was rendered from.
+
+    The on-demand deep-dive (``scripts/deep_dive.py``) reloads this so it can
+    re-render the digest with a chosen item's deep-dive filled in, without
+    re-running the whole collect/curate/rank pipeline.
+    """
+    payload = {
+        "items": [_item_to_dict(it) for it in items],
+        "summaries": summaries,
+        "intro": intro,
+        "run_at": run_dt.isoformat(),
+    }
+    Path(path).write_text(json.dumps(payload, ensure_ascii=False, indent=2),
+                          encoding="utf-8")
+
+
+def load_digest_data(path) -> dict:
+    """Load a sidecar written by ``save_digest_data``.
+
+    Returns ``{"items": list[Item], "summaries": ..., "intro": str, "run_at": str}``.
+    """
+    raw = json.loads(Path(path).read_text(encoding="utf-8"))
+    return {
+        "items": [_item_from_dict(d) for d in raw["items"]],
+        "summaries": raw["summaries"],
+        "intro": raw.get("intro", ""),
+        "run_at": raw.get("run_at", ""),
+    }
 
 
 def write_digest_file(markdown: str, run_dt, out_dir=None) -> Path:
