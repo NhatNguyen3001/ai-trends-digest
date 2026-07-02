@@ -17,7 +17,7 @@ from datetime import date
 from digest import config
 from digest.dedup import _exact_dedup, check_same_story, dedup_within_day_with_vectors
 from digest.embeddings import embed_texts
-from digest.memory_store import prune, remember, search_similar
+from digest.memory_store import prune, remember, sample_recent, search_similar
 from digest.models import Item
 
 
@@ -73,12 +73,44 @@ def _cross_day(items, vectors, store, run_date) -> CurateResult:
     return CurateResult(kept_items, kept_vecs, suppressed, updated)
 
 
-def remember_kept(result: CurateResult, *, store, run_date: date) -> None:
-    """Write the kept items back to memory and prune old entries. Best-effort."""
-    if store is None or not result.vectors:
+def remember_kept(items, vectors, *, store, run_date: date) -> None:
+    """Write the *delivered* items back to memory and prune old entries.
+
+    Delivered-only (Phase 6): cross-day memory means "already shown to the reader,"
+    not "already fetched," so the undelivered bench stays fresh for tomorrow.
+    Best-effort — a store failure never blocks the digest.
+    """
+    if store is None or not vectors:
         return
     try:
-        remember(store, result.items, result.vectors, run_date)
+        remember(store, items, vectors, run_date)
         prune(store, run_date, config.MEMORY_DAYS)
     except Exception as exc:  # noqa: BLE001
         print(f"[curate] write-back failed ({exc}).", file=sys.stderr)
+
+
+def select_vectors(result: CurateResult, items) -> list[list[float]]:
+    """The vectors for ``items``, matched to ``result`` by object identity.
+
+    ``rank_items`` returns the same ``Item`` objects it was given, so identity is
+    preserved from ``curate`` through ranking — this recovers each delivered item's
+    embedding without re-embedding. Returns ``[]`` when ``result`` carries no vectors
+    (e.g. exact-only curation), which ``remember_kept`` treats as a no-op.
+    """
+    by_id = {id(it): v for it, v in zip(result.items, result.vectors)}
+    return [by_id[id(it)] for it in items if id(it) in by_id]
+
+
+def maybe_recaps(store, delivered_count: int, run_date: date, *,
+                 sample_fn=sample_recent) -> list[dict]:
+    """Recap payloads for a quiet day, else []. Best-effort.
+
+    A "quiet day" is fewer than ``config.QUIET_DAY_MIN`` fresh items delivered.
+    """
+    if store is None or delivered_count >= config.QUIET_DAY_MIN:
+        return []
+    try:
+        return sample_fn(store, run_date, config.QUIET_DAY_RECAPS)
+    except Exception as exc:  # noqa: BLE001 — recaps are best-effort
+        print(f"[curate] recap sampling failed ({exc}).", file=sys.stderr)
+        return []

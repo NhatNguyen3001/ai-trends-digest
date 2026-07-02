@@ -89,8 +89,24 @@ def _item_block(rank: int, item: Item, summary: str) -> str:
     return "\n".join(lines)
 
 
+def _revisit_section(payloads: list[dict]) -> str:
+    """A clearly-labeled block of past-delivered items for quiet days. '' if empty.
+
+    Honest framing — never merged with the fresh items, never presented as new.
+    """
+    if not payloads:
+        return ""
+    lines = ["## 🔁 Worth revisiting",
+             "_A quiet day for fresh items — a few past picks from the last two weeks:_",
+             ""]
+    for p in payloads:
+        lines.append(f"- [{p.get('title', '')}]({p.get('url', '')}) — "
+                     f"{p.get('source', '')} · {p.get('date', '')}")
+    return "\n".join(lines)
+
+
 def render_digest(items: list[Item], summaries: list[str], run_date: date,
-                  intro: str = "") -> str:
+                  intro: str = "", revisit: list[dict] | None = None) -> str:
     """Build the full daily digest markdown. Pure — no I/O, no network."""
     parts = [f"# AI Trends Digest — {run_date:%Y-%m-%d}"]
     if intro:
@@ -109,6 +125,11 @@ def render_digest(items: list[Item], summaries: list[str], run_date: date,
             joined = ", ".join(f"#{r}" for r in ranks)
             lines.append(f"- {name} ({type_}): {joined}")
         parts.append("\n".join(lines))
+
+    section = _revisit_section(revisit or [])
+    if section:
+        parts.append("---")
+        parts.append(section)
 
     return "\n\n".join(parts) + "\n"
 

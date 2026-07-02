@@ -11,6 +11,8 @@ day's proleptic-Gregorian ordinal (an int), which makes the 14-day window and
 pruning simple numeric range filters.
 """
 
+import random
+import sys
 import uuid
 from dataclasses import dataclass
 from datetime import date, timedelta
@@ -84,6 +86,30 @@ def remember(store, items, vectors, run_date: date) -> None:
     ]
     if points:
         store.upsert(collection_name=_COLLECTION, points=points)
+
+
+def sample_recent(store, before: date, k: int, *, days: int | None = None) -> list[dict]:
+    """Up to ``k`` random payloads for stored stories in the rolling window
+    ``[before - days, before)``. Payload-only (no vectors). ``[]`` on any error.
+
+    Used for quiet-day recaps. Callers write today's items back *after* delivery,
+    so ``before=today`` naturally excludes today — recaps are past-only.
+    """
+    days = days if days is not None else config.MEMORY_DAYS
+    lo = (before - timedelta(days=days)).toordinal()
+    hi = before.toordinal()
+    try:
+        points, _ = store.scroll(
+            collection_name=_COLLECTION,
+            scroll_filter=models.Filter(must=[models.FieldCondition(
+                key="date_ord", range=models.Range(gte=lo, lt=hi))]),
+            with_payload=True, with_vectors=False, limit=10_000,
+        )
+    except Exception as exc:  # noqa: BLE001 — recaps are best-effort
+        print(f"[memory] sample_recent failed ({exc}).", file=sys.stderr)
+        return []
+    payloads = [p.payload for p in points]
+    return payloads if len(payloads) <= k else random.sample(payloads, k)
 
 
 def prune(store, today: date, days: int = 14) -> None:

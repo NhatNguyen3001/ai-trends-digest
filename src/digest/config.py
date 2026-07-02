@@ -50,6 +50,11 @@ MEMORY_DAYS = int(os.environ.get("MEMORY_DAYS", "14"))        # rolling window l
 CROSS_SUPPRESS = float(os.environ.get("CROSS_SUPPRESS", "0.93"))  # >= -> drop (old news)
 CROSS_UPDATE = float(os.environ.get("CROSS_UPDATE", "0.85"))      # >= -> mark "Update:"
 
+# Quiet-day recaps (Phase 6): when fewer than QUIET_DAY_MIN fresh items are
+# delivered, append QUIET_DAY_RECAPS random past-delivered items as "Worth revisiting".
+QUIET_DAY_MIN = int(os.environ.get("QUIET_DAY_MIN", "5"))
+QUIET_DAY_RECAPS = int(os.environ.get("QUIET_DAY_RECAPS", "3"))
+
 # --- Ranking (slice D) ---
 TOP_N = int(os.environ.get("TOP_N", "20"))            # max items delivered (a ceiling, not a quota)
 W_SIGNIFICANCE = float(os.environ.get("W_SIGNIFICANCE", "0.5"))
@@ -67,6 +72,12 @@ SCORE_FLOOR = float(os.environ.get("SCORE_FLOOR", "4.0"))  # min blended score t
 
 # --- Digest assembly (Phase 4) ---
 DIGEST_DIR = os.environ.get("DIGEST_DIR", "./digests")   # where daily .md files are written
+
+# --- Over-collect depth (Phase 6) ---
+# Fetch a deep bench, not a shortlist. Delivery is still bounded by TOP_N + source
+# caps + SCORE_FLOOR, so raising these only widens the pool the curator/ranker use.
+ARXIV_MAX = int(os.environ.get("ARXIV_MAX", "25"))
+GITHUB_MAX = int(os.environ.get("GITHUB_MAX", "25"))   # both github and github_active
 
 # --- Deep-dive engine (Phase 5) ---
 # Tavily is a soft dependency: blank key -> a deep-dive degrades to "" (the digest

@@ -16,7 +16,9 @@ SRC = Path(__file__).resolve().parent.parent / "src"
 sys.path.insert(0, str(SRC))
 
 from digest.collectors import collect_all  # noqa: E402 (after path setup)
-from digest.curate import curate, remember_kept  # noqa: E402
+from digest.curate import (  # noqa: E402
+    curate, remember_kept, select_vectors, maybe_recaps,
+)
 from digest.ranking import rank_items  # noqa: E402
 from digest.significance import enrich_significance  # noqa: E402
 from digest.tagging import tag_items  # noqa: E402
@@ -52,6 +54,7 @@ def main() -> None:
           f"Ranking...")
 
     items = rank_items(curated, top_n=config.TOP_N)
+    delivered_vecs = select_vectors(result, items)   # vectors for the delivered subset
     print(f"{len(curated)} curated -> {len(items)} delivered "
           f"(<={config.TOP_N}, capped by source-type + score floor {config.SCORE_FLOOR}). "
           f"Checking OpenReview for papers...")
@@ -64,9 +67,11 @@ def main() -> None:
     summaries = summarise_items(items)
 
     run_dt = datetime.now()
+    # Quiet-day recaps: on a thin day, resurface a few past-delivered items.
+    revisit = maybe_recaps(store, len(items), date.today())
     print("Writing the day's intro...\n")
     intro = write_intro(items)
-    markdown = render_digest(items, summaries, run_dt, intro)
+    markdown = render_digest(items, summaries, run_dt, intro, revisit=revisit)
     print(markdown)
 
     try:
@@ -79,8 +84,8 @@ def main() -> None:
         print(f"[run] could not write digest file ({exc}); printed above only.",
               file=sys.stderr)
 
-    # Write today's survivors back to memory AFTER delivery, then prune.
-    remember_kept(result, store=store, run_date=date.today())
+    # Delivered-only (Phase 6): remember what the reader saw, not the whole pool.
+    remember_kept(items, delivered_vecs, store=store, run_date=date.today())
 
 
 if __name__ == "__main__":

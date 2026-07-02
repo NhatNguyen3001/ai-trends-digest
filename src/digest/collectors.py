@@ -19,6 +19,7 @@ import asyncio
 import sys
 from collections.abc import Callable
 
+from digest import config
 from digest.models import Item
 from digest.sources.anthropic_source import fetch_anthropic
 from digest.sources.anthropic_news_source import fetch_anthropic_news
@@ -29,12 +30,12 @@ from digest.sources.rss_source import fetch_rss
 # Source name -> a zero-arg callable returning list[Item]. Per-source counts are
 # kept modest here; Phase 3's curator will rank/filter the merged pile down.
 COLLECTORS: dict[str, Callable[[], list[Item]]] = {
-    "arxiv": lambda: fetch_arxiv(max_results=8),
+    "arxiv": lambda: fetch_arxiv(max_results=config.ARXIV_MAX),
     "rss": lambda: fetch_rss(max_per_feed=3),
     "anthropic": lambda: fetch_anthropic(max_results=4),
     "anthropic_news": lambda: fetch_anthropic_news(max_results=4),
-    "github": lambda: fetch_github(max_results=6),
-    "github_active": lambda: fetch_github_active(max_results=6),
+    "github": lambda: fetch_github(max_results=config.GITHUB_MAX),
+    "github_active": lambda: fetch_github_active(max_results=config.GITHUB_MAX),
 }
 
 
