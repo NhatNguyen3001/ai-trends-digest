@@ -7,6 +7,8 @@ no node touches the network or the real API during tests.
 Reasoning nodes call the existing ``anthropic`` client directly (``client.messages
 .create``) — LangGraph is orchestration only, never an LLM wrapper.
 """
+import json
+
 from digest import config
 
 
@@ -73,6 +75,66 @@ def _format_docs(docs: list[dict]) -> str:
         f"[{i}] {d.get('title', '')} ({d.get('url', '')})\n{d.get('text', '')}"
         for i, d in enumerate(docs, start=1)
     )
+
+
+_GRADE_SYSTEM = (
+    "You judge whether each retrieved source is actually relevant and useful for "
+    "writing about the topic. Reply with ONLY a JSON object mapping each source's "
+    "index (as a string) to true (keep) or false (drop), e.g. "
+    '{"0": true, "1": false}. No prose.'
+)
+
+
+def make_grade(client_factory):
+    """Node (CRAG): keep only the relevant docs; flag whether we have enough.
+
+    The verdict is asked for as an INDEX-KEYED JSON object (never a positional
+    array) — the project's hard rule, so a shifted/short reply can't silently
+    misalign which doc got which verdict.
+    """
+    def grade(state) -> dict:
+        docs = state["docs"]
+        if not docs:
+            return {"graded_docs": [], "enough": False}
+        user = (
+            f"Topic: {state['item'].title}\n\n"
+            f"Sources:\n{_format_docs(docs)}\n\n"
+            "Return the keep/drop JSON object."
+        )
+        text = _ask(client_factory, _GRADE_SYSTEM, user, max_tokens=300)
+        try:
+            verdict = json.loads(text)
+        except (json.JSONDecodeError, TypeError):
+            verdict = {}
+        kept = [d for i, d in enumerate(docs) if verdict.get(str(i)) is True]
+        return {"graded_docs": kept, "enough": len(kept) >= 1}
+    return grade
+
+
+_CORRECT_SYSTEM = (
+    "The previous web searches returned weak results. Propose better, reworded "
+    "search sub-questions for the topic. ONE per line, no numbering, no preamble."
+)
+
+
+def make_correct(client_factory):
+    """Node (CRAG): reword the sub-questions for another retrieval pass.
+
+    Increments ``iterations`` so the budget controller can bound the loop.
+    """
+    def correct(state) -> dict:
+        item = state["item"]
+        prior = "\n".join(f"- {q}" for q in state["subquestions"])
+        user = (
+            f"Topic: {item.title}\nSummary: {item.summary}\n\n"
+            f"Previous sub-questions (weak results):\n{prior}\n\n"
+            f"Write up to {config.DEEP_DIVE_SUBQUESTIONS} better sub-questions."
+        )
+        text = _ask(client_factory, _CORRECT_SYSTEM, user, max_tokens=400)
+        subs = [line.strip() for line in text.splitlines() if line.strip()]
+        return {"subquestions": subs[: config.DEEP_DIVE_SUBQUESTIONS],
+                "iterations": state["iterations"] + 1}
+    return correct
 
 
 def make_synthesise(client_factory):

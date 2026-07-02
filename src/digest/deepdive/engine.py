@@ -22,6 +22,7 @@ def _initial_state(item: Item) -> dict:
         "draft": "",
         "searches_used": 0,
         "iterations": 0,
+        "enough": False,
     }
 
 

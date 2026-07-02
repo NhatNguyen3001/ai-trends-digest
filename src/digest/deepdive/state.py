@@ -17,3 +17,4 @@ class DeepDiveState(TypedDict):
     draft: str                  # synthesise -> the final cited write-up
     searches_used: int          # budget counter: total Tavily queries run
     iterations: int             # budget counter: corrective/reflective passes
+    enough: bool                # grade (slice 2) -> did we keep any relevant docs?
