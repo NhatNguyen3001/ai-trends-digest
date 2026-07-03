@@ -14,6 +14,7 @@ from pydantic import BaseModel
 from digest import config
 from digest.llm import get_client
 from digest.models import Item
+from digest.observability import traceable
 
 log = logging.getLogger(__name__)
 
@@ -110,6 +111,7 @@ def _score(items, client_factory) -> Ranking:
     return response.parsed_output
 
 
+@traceable
 def rank_items(items, *, top_n=None, caps=None, floor=None, client_factory=get_client):
     """Score items, set item.score/score_reason, return the delivered selection.
 

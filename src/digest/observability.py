@@ -2,9 +2,12 @@
 tracing gate. All best-effort except preflight's one deliberate hard-fail.
 """
 import logging
+import os
 import sys
 from datetime import datetime
 from pathlib import Path
+
+from langsmith import traceable  # re-exported; safe no-op when tracing is disabled
 
 from digest import config
 
@@ -53,3 +56,16 @@ def preflight() -> None:
         log.warning("TAVILY_API_KEY not set — deep-dive disabled.")
     if not getattr(config, "LANGSMITH_API_KEY", ""):
         log.warning("LANGSMITH_API_KEY not set — tracing disabled.")
+
+
+def configure_tracing() -> bool:
+    """Enable LangSmith tracing iff a key is configured. Sets the env vars LangGraph
+    and ``@traceable`` read. Returns whether tracing is on. No key -> a no-op."""
+    if not config.LANGSMITH_API_KEY:
+        return False
+    os.environ["LANGSMITH_API_KEY"] = config.LANGSMITH_API_KEY
+    os.environ["LANGCHAIN_TRACING_V2"] = "true"
+    os.environ["LANGCHAIN_PROJECT"] = config.LANGSMITH_PROJECT
+    logging.getLogger(__name__).info("LangSmith tracing enabled (project=%s).",
+                                     config.LANGSMITH_PROJECT)
+    return True

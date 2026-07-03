@@ -17,6 +17,7 @@ from pydantic import BaseModel
 from digest import config
 from digest.llm import get_client
 from digest.models import Item, Tag
+from digest.observability import traceable
 
 log = logging.getLogger(__name__)
 
@@ -95,6 +96,7 @@ def _tag(items, client_factory) -> Tagging:
     return response.parsed_output
 
 
+@traceable
 def tag_items(items, *, client_factory=get_client) -> None:
     """Annotate each item's ``tags`` in place from one batched Claude call.
 

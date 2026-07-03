@@ -19,6 +19,7 @@ import json
 from digest import config
 from digest.llm import get_client
 from digest.models import Item
+from digest.observability import traceable
 
 SYSTEM = (
     "You summarise AI news, papers, and tools for a daily digest read by an AI "
@@ -28,6 +29,7 @@ SYSTEM = (
 )
 
 
+@traceable
 def summarise_items(items: list[Item]) -> list[str]:
     """Return a list of short summaries, one per item, aligned with ``items``."""
     if not items:

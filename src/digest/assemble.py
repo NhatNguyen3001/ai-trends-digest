@@ -21,6 +21,7 @@ from pathlib import Path
 from digest import config
 from digest.llm import get_client
 from digest.models import Item, Tag
+from digest.observability import traceable
 from digest.tagging import build_tag_index
 
 log = logging.getLogger(__name__)
@@ -34,6 +35,7 @@ _INTRO_SYSTEM = (
 )
 
 
+@traceable
 def write_intro(items, *, client_factory=get_client) -> str:
     """One short 'today at a glance' blurb. Soft-fails to '' on any error."""
     if not items:

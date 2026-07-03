@@ -11,6 +11,7 @@ import logging
 
 from digest import config
 from digest.llm import get_client
+from digest.observability import traceable
 from digest.openreview import lookup_openreview
 
 log = logging.getLogger(__name__)
@@ -70,6 +71,7 @@ def _significance_note(title, *, client, lookup_fn) -> str:
     return ""  # loop exhausted -> no note
 
 
+@traceable
 def enrich_significance(items, *, client_factory=get_client, lookup_fn=lookup_openreview) -> None:
     """Annotate each arXiv paper in ``items`` with a peer-review significance note."""
     client = None

@@ -35,9 +35,10 @@ def main() -> None:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
 
-    from digest.observability import setup_logging, preflight
+    from digest.observability import setup_logging, preflight, configure_tracing
     setup_logging()
     preflight()
+    configure_tracing()
 
     print("Collecting from all sources (arXiv, RSS, Anthropic, GitHub)...")
     items = collect_all()
