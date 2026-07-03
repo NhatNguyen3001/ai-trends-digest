@@ -4,9 +4,11 @@ Keeping the `tavily` import behind this one function means:
 - tests inject a fake `search_fn` and never touch the network or need a key;
 - if we swap search providers later, only this file changes.
 """
-import sys
+import logging
 
 from digest import config
+
+log = logging.getLogger(__name__)
 
 
 def _client():
@@ -25,7 +27,7 @@ def web_search(query: str, *, max_results: int = 5) -> list[dict]:
     try:
         raw = _client().search(query, max_results=max_results)
     except Exception as exc:  # noqa: BLE001 — search is best-effort
-        print(f"[deepdive] search failed ({type(exc).__name__}: {exc})", file=sys.stderr)
+        log.warning("search failed (%s: %s)", type(exc).__name__, exc)
         return []
     return [{"title": r.get("title", ""), "url": r.get("url", ""),
              "text": r.get("content", "")} for r in raw.get("results", [])]

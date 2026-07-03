@@ -7,8 +7,8 @@ share a tag. Annotate-only (never touches ranking/dedup); whole-batch soft-fail 
 tagging error just leaves items untagged and the digest still ships.
 """
 
+import logging
 import re
-import sys
 
 from typing import Literal
 
@@ -17,6 +17,8 @@ from pydantic import BaseModel
 from digest import config
 from digest.llm import get_client
 from digest.models import Item, Tag
+
+log = logging.getLogger(__name__)
 
 
 def _normalize(name: str) -> str:
@@ -104,8 +106,7 @@ def tag_items(items, *, client_factory=get_client) -> None:
     try:
         tagging = _tag(items, client_factory)
     except Exception as exc:  # noqa: BLE001 — tagging is best-effort
-        print(f"[tagging] tagging failed ({exc}); delivering items untagged.",
-              file=sys.stderr)
+        log.warning("tagging failed (%s); delivering items untagged.", exc)
         return
 
     by_index = {t.index: t for t in tagging.items}

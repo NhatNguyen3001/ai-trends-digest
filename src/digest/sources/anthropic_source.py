@@ -17,12 +17,14 @@ that risk is the price of a source with no feed or API. Pure standard library.
 
 import html
 import json
+import logging
 import re
-import sys
 import urllib.request
 from datetime import datetime, timezone
 
 from digest.models import Item
+
+log = logging.getLogger(__name__)
 
 BASE = "https://claude.com"
 _UA = {"User-Agent": "Mozilla/5.0 (compatible; ai-trends-digest/0.1)"}
@@ -87,9 +89,9 @@ def _parse_date(value: str | None) -> datetime:
 
 
 def _warn(source: str, message: str) -> None:
-    """Print a non-fatal warning. A failing collector should degrade to an empty
+    """Log a non-fatal warning. A failing collector should degrade to an empty
     list so the rest of the digest (arXiv, RSS) still runs — never crash the run."""
-    print(f"[{source}] {message}", file=sys.stderr)
+    log.warning("[%s] %s", source, message)
 
 
 def scrape_blog(base: str, listing_path: str, path_prefix: str, source: str,

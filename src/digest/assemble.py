@@ -14,7 +14,7 @@ section reuses slice F's ``build_tag_index`` rather than re-deriving grouping.
 """
 
 import json
-import sys
+import logging
 from datetime import date, datetime
 from pathlib import Path
 
@@ -22,6 +22,8 @@ from digest import config
 from digest.llm import get_client
 from digest.models import Item, Tag
 from digest.tagging import build_tag_index
+
+log = logging.getLogger(__name__)
 
 
 _INTRO_SYSTEM = (
@@ -51,8 +53,7 @@ def write_intro(items, *, client_factory=get_client) -> str:
         )
         return "".join(b.text for b in response.content if b.type == "text").strip()
     except Exception as exc:  # noqa: BLE001 — intro is best-effort
-        print(f"[assemble] intro failed ({exc}); rendering without it.",
-              file=sys.stderr)
+        log.warning("intro failed (%s); rendering without it.", exc)
         return ""
 
 

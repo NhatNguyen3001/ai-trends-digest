@@ -14,7 +14,7 @@ within the unauthenticated search limit (~10 requests/min), plenty here.
 """
 
 import json
-import sys
+import logging
 import urllib.parse
 import urllib.request
 from datetime import datetime, timedelta, timezone
@@ -22,13 +22,15 @@ from datetime import datetime, timedelta, timezone
 from digest import config
 from digest.models import Item
 
+log = logging.getLogger(__name__)
+
 SEARCH_URL = "https://api.github.com/search/repositories"
 DEFAULT_TOPICS = ["llm", "ai-agents", "rag"]
 
 
 def _warn(message: str) -> None:
     """Non-fatal warning — a failing collector degrades to [] rather than crash."""
-    print(f"[github] {message}", file=sys.stderr)
+    log.warning("%s", message)
 
 
 def _headers() -> dict[str, str]:

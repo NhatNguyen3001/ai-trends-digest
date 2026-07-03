@@ -11,8 +11,8 @@ day's proleptic-Gregorian ordinal (an int), which makes the 14-day window and
 pruning simple numeric range filters.
 """
 
+import logging
 import random
-import sys
 import uuid
 from dataclasses import dataclass
 from datetime import date, timedelta
@@ -22,6 +22,8 @@ from qdrant_client import QdrantClient, models
 from digest import config
 from digest.dedup import _normalize_url
 from digest.models import Item
+
+log = logging.getLogger(__name__)
 
 _COLLECTION = "seen_stories"
 # Fixed namespace so the same URL always hashes to the same point id across runs.
@@ -106,7 +108,7 @@ def sample_recent(store, before: date, k: int, *, days: int | None = None) -> li
             with_payload=True, with_vectors=False, limit=10_000,
         )
     except Exception as exc:  # noqa: BLE001 — recaps are best-effort
-        print(f"[memory] sample_recent failed ({exc}).", file=sys.stderr)
+        log.warning("sample_recent failed (%s).", exc)
         return []
     payloads = [p.payload for p in points]
     return payloads if len(payloads) <= k else random.sample(payloads, k)

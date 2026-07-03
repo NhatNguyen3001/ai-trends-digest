@@ -4,13 +4,15 @@
 returns the final write-up. Any failure — missing key, Tavily/LLM error, graph
 blow-up — soft-fails to ``""`` so the digest is never lost to a bad deep-dive.
 """
-import sys
+import logging
 
 from digest.deepdive.graph import build_graph
 from digest.deepdive.nodes import abstract_doc
 from digest.deepdive.search import web_search
 from digest.llm import get_client
 from digest.models import Item
+
+log = logging.getLogger(__name__)
 
 
 def _initial_state(item: Item) -> dict:
@@ -40,6 +42,6 @@ def deep_dive(item: Item, *, client_factory=get_client, search_fn=web_search) ->
         final = graph.invoke(_initial_state(item))
         return final.get("draft", "")
     except Exception as exc:  # noqa: BLE001 — deep-dive is best-effort
-        print(f"[deepdive] deep_dive failed ({type(exc).__name__}: {exc}); "
-              "returning empty.", file=sys.stderr)
+        log.warning("deep_dive failed (%s: %s); returning empty.",
+                    type(exc).__name__, exc)
         return ""

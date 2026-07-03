@@ -16,7 +16,7 @@ event loop internally), so callers don't need to know any of this.
 """
 
 import asyncio
-import sys
+import logging
 from collections.abc import Callable
 
 from digest import config
@@ -26,6 +26,8 @@ from digest.sources.anthropic_news_source import fetch_anthropic_news
 from digest.sources.arxiv_source import fetch_arxiv
 from digest.sources.github_source import fetch_github, fetch_github_active
 from digest.sources.rss_source import fetch_rss
+
+log = logging.getLogger(__name__)
 
 # Source name -> a zero-arg callable returning list[Item]. Per-source counts are
 # kept modest here; Phase 3's curator will rank/filter the merged pile down.
@@ -62,13 +64,10 @@ async def collect_all_async(
     items: list[Item] = []
     for name, result in zip(names, results):
         if isinstance(result, Exception):
-            print(
-                f"[runner] collector '{name}' crashed "
-                f"({type(result).__name__}: {result})",
-                file=sys.stderr,
-            )
+            log.warning("collector %r crashed (%s: %s)",
+                        name, type(result).__name__, result)
             result = []
-        print(f"[runner] {name}: {len(result)} items", file=sys.stderr)
+        log.info("%s: %d items", name, len(result))
         items.extend(result)
 
     return items

@@ -73,6 +73,14 @@ SCORE_FLOOR = float(os.environ.get("SCORE_FLOOR", "4.0"))  # min blended score t
 # --- Digest assembly (Phase 4) ---
 DIGEST_DIR = os.environ.get("DIGEST_DIR", "./digests")   # where daily .md files are written
 
+# --- Observability (Phase 6 harness hardening) ---
+LOG_DIR = os.environ.get("LOG_DIR", "./logs")     # per-run .log files (git-ignored)
+LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")
+
+# LangSmith tracing is OPTIONAL: blank key -> tracing stays off (no external calls).
+LANGSMITH_API_KEY = os.environ.get("LANGSMITH_API_KEY", "")
+LANGSMITH_PROJECT = os.environ.get("LANGSMITH_PROJECT", "ai-trends-digest")
+
 # --- Over-collect depth (Phase 6) ---
 # Fetch a deep bench, not a shortlist. Delivery is still bounded by TOP_N + source
 # caps + SCORE_FLOOR, so raising these only widens the pool the curator/ranker use.

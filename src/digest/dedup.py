@@ -10,7 +10,7 @@ are injected so the logic tests without network access.
 """
 
 import json
-import sys
+import logging
 from urllib.parse import urlsplit
 
 import numpy as np
@@ -19,6 +19,8 @@ from digest import config
 from digest.embeddings import embed_texts
 from digest.llm import get_client
 from digest.models import Item
+
+log = logging.getLogger(__name__)
 
 
 def _normalize_url(url: str) -> str:
@@ -130,8 +132,7 @@ def check_same_story(items, pairs, *, client_factory=get_client):
             text = text.strip()
         verdicts = json.loads(text)
     except Exception as exc:  # noqa: BLE001 — soft-fail by design
-        print(f"[dedup] same-story check failed ({exc}); treating pairs as distinct.",
-              file=sys.stderr)
+        log.warning("same-story check failed (%s); treating pairs as distinct.", exc)
         return set()
 
     same = set()

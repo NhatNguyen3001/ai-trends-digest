@@ -68,6 +68,10 @@ def main() -> None:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
 
+    from digest.observability import setup_logging, preflight
+    setup_logging()
+    preflight()
+
     stamp, numbers = _parse_args(sys.argv[1:])
     directory = Path(config.DIGEST_DIR)
 

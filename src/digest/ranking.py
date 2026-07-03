@@ -7,13 +7,15 @@ them into a single score, sort, and truncate to TOP_N. Ranking is best-effort: a
 error returns the items unranked and unfiltered so the digest still ships.
 """
 
-import sys
+import logging
 
 from pydantic import BaseModel
 
 from digest import config
 from digest.llm import get_client
 from digest.models import Item
+
+log = logging.getLogger(__name__)
 
 
 class ItemScore(BaseModel):
@@ -122,8 +124,7 @@ def rank_items(items, *, top_n=None, caps=None, floor=None, client_factory=get_c
     try:
         ranking = _score(items, client_factory)
     except Exception as exc:  # noqa: BLE001 — ranking is best-effort
-        print(f"[ranking] scoring failed ({exc}); delivering items unranked.",
-              file=sys.stderr)
+        log.warning("scoring failed (%s); delivering items unranked.", exc)
         return items
 
     by_index = {s.index: s for s in ranking.scores}

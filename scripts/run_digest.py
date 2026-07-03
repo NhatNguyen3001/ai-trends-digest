@@ -35,6 +35,10 @@ def main() -> None:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
 
+    from digest.observability import setup_logging, preflight
+    setup_logging()
+    preflight()
+
     print("Collecting from all sources (arXiv, RSS, Anthropic, GitHub)...")
     items = collect_all()
     raw_count = len(items)

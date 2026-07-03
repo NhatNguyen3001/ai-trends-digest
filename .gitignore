@@ -31,6 +31,7 @@ Thumbs.db
 # --- Local runtime state (Qdrant embedded store, digests, etc.) ---
 data/
 digests/
+logs/
 
 .claude/
 .wolf/

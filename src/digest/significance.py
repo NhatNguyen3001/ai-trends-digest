@@ -7,11 +7,13 @@ Annotate-only — it never changes ranking. Per-item soft-fail: a failed lookup 
 API error leaves that note empty and the run continues.
 """
 
-import sys
+import logging
 
 from digest import config
 from digest.llm import get_client
 from digest.openreview import lookup_openreview
+
+log = logging.getLogger(__name__)
 
 _TOOL = {
     "name": "lookup_openreview",
@@ -80,4 +82,4 @@ def enrich_significance(items, *, client_factory=get_client, lookup_fn=lookup_op
             it.significance_note = _significance_note(it.title, client=client,
                                                       lookup_fn=lookup_fn)
         except Exception as exc:  # noqa: BLE001 — per-item soft-fail
-            print(f"[significance] enrich failed for {it.title!r} ({exc})", file=sys.stderr)
+            log.warning("enrich failed for %r (%s)", it.title, exc)

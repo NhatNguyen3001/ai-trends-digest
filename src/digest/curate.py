@@ -10,7 +10,7 @@ delivery (remember_kept) without re-embedding. Memory is best-effort: if
 embeddings or the store fail, every item passes through as new.
 """
 
-import sys
+import logging
 from dataclasses import dataclass, field
 from datetime import date
 
@@ -19,6 +19,8 @@ from digest.dedup import _exact_dedup, check_same_story, dedup_within_day_with_v
 from digest.embeddings import embed_texts
 from digest.memory_store import prune, remember, sample_recent, search_similar
 from digest.models import Item
+
+log = logging.getLogger(__name__)
 
 
 @dataclass
@@ -51,8 +53,7 @@ def curate(items, *, store=None, embed_fn=embed_texts,
     try:
         return _cross_day(items, vectors, store, run_date)
     except Exception as exc:  # noqa: BLE001 — memory is best-effort
-        print(f"[curate] cross-day memory unavailable ({exc}); keeping all as new.",
-              file=sys.stderr)
+        log.warning("cross-day memory unavailable (%s); keeping all as new.", exc)
         return CurateResult(items, vectors)
 
 
@@ -86,7 +87,7 @@ def remember_kept(items, vectors, *, store, run_date: date) -> None:
         remember(store, items, vectors, run_date)
         prune(store, run_date, config.MEMORY_DAYS)
     except Exception as exc:  # noqa: BLE001
-        print(f"[curate] write-back failed ({exc}).", file=sys.stderr)
+        log.warning("write-back failed (%s).", exc)
 
 
 def select_vectors(result: CurateResult, items) -> list[list[float]]:
@@ -112,5 +113,5 @@ def maybe_recaps(store, delivered_count: int, run_date: date, *,
     try:
         return sample_fn(store, run_date, config.QUIET_DAY_RECAPS)
     except Exception as exc:  # noqa: BLE001 — recaps are best-effort
-        print(f"[curate] recap sampling failed ({exc}).", file=sys.stderr)
+        log.warning("recap sampling failed (%s).", exc)
         return []

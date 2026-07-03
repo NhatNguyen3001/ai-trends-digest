@@ -10,11 +10,13 @@ This module is the deterministic 'tool'; significance.py hands it to Claude.
 """
 
 import json
+import logging
 import re
-import sys
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass
+
+log = logging.getLogger(__name__)
 
 _BASE = "https://api2.openreview.net"
 _SEARCH = f"{_BASE}/notes/search"
@@ -118,5 +120,5 @@ def lookup_openreview(title: str) -> OpenReviewResult | None:
         return OpenReviewResult(venue=venue, decision=_decision_from_venue(venue),
                                 avg_rating=avg, num_reviews=n)
     except Exception as exc:  # noqa: BLE001 — soft-fail by design
-        print(f"[openreview] lookup failed ({exc})", file=sys.stderr)
+        log.warning("lookup failed (%s)", exc)
         return None

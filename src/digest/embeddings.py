@@ -5,11 +5,13 @@ any error returns None, and the caller falls back to exact-only dedup. The Voyag
 client reads VOYAGE_API_KEY from the environment (loaded by config).
 """
 
-import sys
+import logging
 
 import voyageai
 
 from digest import config
+
+log = logging.getLogger(__name__)
 
 _BATCH = 128  # Voyage's recommended max texts per request
 
@@ -19,8 +21,7 @@ def embed_texts(texts: list[str]) -> list[list[float]] | None:
     if not texts:
         return []
     if not config.VOYAGE_API_KEY:
-        print("[embeddings] VOYAGE_API_KEY not set; skipping semantic dedup.",
-              file=sys.stderr)
+        log.warning("VOYAGE_API_KEY not set; skipping semantic dedup.")
         return None
     try:
         client = voyageai.Client(api_key=config.VOYAGE_API_KEY)
@@ -32,6 +33,5 @@ def embed_texts(texts: list[str]) -> list[list[float]] | None:
             vectors.extend(result.embeddings)
         return vectors
     except Exception as exc:  # noqa: BLE001 — soft-fail by design
-        print(f"[embeddings] Voyage call failed ({exc}); skipping semantic dedup.",
-              file=sys.stderr)
+        log.warning("Voyage call failed (%s); skipping semantic dedup.", exc)
         return None
