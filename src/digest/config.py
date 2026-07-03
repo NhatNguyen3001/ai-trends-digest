@@ -77,6 +77,10 @@ DIGEST_DIR = os.environ.get("DIGEST_DIR", "./digests")   # where daily .md files
 LOG_DIR = os.environ.get("LOG_DIR", "./logs")     # per-run .log files (git-ignored)
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")
 
+RETRY_ATTEMPTS = int(os.environ.get("RETRY_ATTEMPTS", "3"))
+RETRY_BASE_DELAY = float(os.environ.get("RETRY_BASE_DELAY", "1.0"))
+ANTHROPIC_MAX_RETRIES = int(os.environ.get("ANTHROPIC_MAX_RETRIES", "4"))
+
 # LangSmith tracing is OPTIONAL: blank key -> tracing stays off (no external calls).
 LANGSMITH_API_KEY = os.environ.get("LANGSMITH_API_KEY", "")
 LANGSMITH_PROJECT = os.environ.get("LANGSMITH_PROJECT", "ai-trends-digest")

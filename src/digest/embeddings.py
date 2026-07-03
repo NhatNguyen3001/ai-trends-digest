@@ -10,6 +10,7 @@ import logging
 import voyageai
 
 from digest import config
+from digest.retry import with_retries
 
 log = logging.getLogger(__name__)
 
@@ -28,8 +29,8 @@ def embed_texts(texts: list[str]) -> list[list[float]] | None:
         vectors: list[list[float]] = []
         for i in range(0, len(texts), _BATCH):
             batch = texts[i:i + _BATCH]
-            result = client.embed(batch, model=config.VOYAGE_MODEL,
-                                  input_type="document")
+            result = with_retries(lambda: client.embed(
+                batch, model=config.VOYAGE_MODEL, input_type="document"))
             vectors.extend(result.embeddings)
         return vectors
     except Exception as exc:  # noqa: BLE001 — soft-fail by design

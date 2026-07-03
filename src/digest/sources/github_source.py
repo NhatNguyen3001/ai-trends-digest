@@ -21,6 +21,7 @@ from datetime import datetime, timedelta, timezone
 
 from digest import config
 from digest.models import Item
+from digest.retry import with_retries
 
 log = logging.getLogger(__name__)
 
@@ -55,8 +56,12 @@ def _search(topic: str, qualifiers: str, per_page: int) -> list[dict]:
         {"q": query, "sort": "stars", "order": "desc", "per_page": per_page}
     )
     req = urllib.request.Request(f"{SEARCH_URL}?{params}", headers=_headers())
-    with urllib.request.urlopen(req, timeout=20) as resp:
-        return json.loads(resp.read().decode("utf-8")).get("items", [])
+
+    def _do():
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            return json.loads(resp.read().decode("utf-8")).get("items", [])
+
+    return with_retries(_do)
 
 
 def _parse_dt(value: str | None) -> datetime:

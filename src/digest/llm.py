@@ -12,4 +12,5 @@ from digest import config
 
 def get_client() -> anthropic.Anthropic:
     """Build an Anthropic client using the key from config (fails loud if missing)."""
-    return anthropic.Anthropic(api_key=config.require_api_key())
+    return anthropic.Anthropic(api_key=config.require_api_key(),
+                               max_retries=config.ANTHROPIC_MAX_RETRIES)

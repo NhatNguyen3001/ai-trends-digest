@@ -7,6 +7,7 @@ Keeping the `tavily` import behind this one function means:
 import logging
 
 from digest import config
+from digest.retry import with_retries
 
 log = logging.getLogger(__name__)
 
@@ -25,7 +26,7 @@ def web_search(query: str, *, max_results: int = 5) -> list[dict]:
     an empty list so the deep-dive degrades gracefully rather than crashing.
     """
     try:
-        raw = _client().search(query, max_results=max_results)
+        raw = with_retries(lambda: _client().search(query, max_results=max_results))
     except Exception as exc:  # noqa: BLE001 — search is best-effort
         log.warning("search failed (%s: %s)", type(exc).__name__, exc)
         return []
