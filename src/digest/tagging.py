@@ -15,7 +15,7 @@ from typing import Literal
 from pydantic import BaseModel
 
 from digest import config
-from digest.llm import get_client
+from digest.llm import get_client, parse_message
 from digest.models import Item, Tag
 from digest.observability import traceable
 
@@ -86,14 +86,14 @@ def _tag(items, client_factory) -> Tagging:
         f"clear entities).\n\n{numbered}"
     )
     client = client_factory()
-    response = client.messages.parse(
+    return parse_message(
+        client,
         model=config.ANTHROPIC_MODEL,
         max_tokens=4000,
         system=SYSTEM,
         messages=[{"role": "user", "content": instruction}],
         output_format=Tagging,
     )
-    return response.parsed_output
 
 
 @traceable

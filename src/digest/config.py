@@ -84,6 +84,10 @@ ANTHROPIC_MAX_RETRIES = int(os.environ.get("ANTHROPIC_MAX_RETRIES", "4"))
 # LangSmith tracing is OPTIONAL: blank key -> tracing stays off (no external calls).
 LANGSMITH_API_KEY = os.environ.get("LANGSMITH_API_KEY", "")
 LANGSMITH_PROJECT = os.environ.get("LANGSMITH_PROJECT", "ai-trends-digest")
+# Tracing on/off flag, read straight from .env (LangGraph + @traceable read this env
+# var by name). Anything but "true" -> off. configure_tracing() also gates on the API
+# key, so tracing needs BOTH a key and this flag set to "true".
+LANGCHAIN_TRACING_V2 = os.environ.get("LANGCHAIN_TRACING_V2", "true")
 
 # --- Over-collect depth (Phase 6) ---
 # Fetch a deep bench, not a shortlist. Delivery is still bounded by TOP_N + source

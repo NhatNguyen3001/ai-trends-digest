@@ -59,9 +59,10 @@ def preflight() -> None:
 
 
 def configure_tracing() -> bool:
-    """Enable LangSmith tracing iff a key is configured. Sets the env vars LangGraph
-    and ``@traceable`` read. Returns whether tracing is on. No key -> a no-op."""
-    if not config.LANGSMITH_API_KEY:
+    """Enable LangSmith tracing iff a key is configured AND LANGCHAIN_TRACING_V2 is
+    "true" (both from .env). Sets the env vars LangGraph and ``@traceable`` read.
+    Returns whether tracing is on. No key / flag off -> a no-op."""
+    if not config.LANGSMITH_API_KEY or config.LANGCHAIN_TRACING_V2.lower() != "true":
         return False
     os.environ["LANGSMITH_API_KEY"] = config.LANGSMITH_API_KEY
     os.environ["LANGCHAIN_TRACING_V2"] = "true"

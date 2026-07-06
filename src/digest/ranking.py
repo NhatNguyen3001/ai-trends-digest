@@ -12,7 +12,7 @@ import logging
 from pydantic import BaseModel
 
 from digest import config
-from digest.llm import get_client
+from digest.llm import get_client, parse_message
 from digest.models import Item
 from digest.observability import traceable
 
@@ -101,14 +101,20 @@ def _score(items, client_factory) -> Ranking:
         f"{len(items) - 1}.\n\n{numbered}"
     )
     client = client_factory()
-    response = client.messages.parse(
+    # One score object per item (~120 tokens: 3 ints + a one-sentence reason) must
+    # fit under max_tokens, or the structured-output JSON truncates mid-string and
+    # parsing fails. The curated pool feeding the ranker grew with the Phase 6
+    # over-collect (ARXIV_MAX/GITHUB_MAX=25), so a fixed 4000 was too small. Scale
+    # with the pool, capped at a non-streaming-safe ceiling.
+    max_tokens = min(16000, 2000 + 120 * len(items))
+    return parse_message(
+        client,
         model=config.ANTHROPIC_MODEL,
-        max_tokens=4000,
+        max_tokens=max_tokens,
         system=SYSTEM,
         messages=[{"role": "user", "content": instruction}],
         output_format=Ranking,
     )
-    return response.parsed_output
 
 
 @traceable
