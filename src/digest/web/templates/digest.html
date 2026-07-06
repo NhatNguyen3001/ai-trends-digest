@@ -43,7 +43,7 @@
       <div class="font-mono text-xs text-faint pt-1 tabular-nums">{{ "%02d"|format(item.index) }}</div>
       <div>
         <div class="flex flex-wrap items-center gap-x-3.5 gap-y-2.5 mb-2">
-          <div class="meter"><div class="fill" style="width:{{ item.score_pct }}%"></div></div>
+          <div class="pips">{% for i in range(10) %}<i class="pip{% if i < item.score_pips %} on{% endif %}"></i>{% endfor %}</div>
           <span class="font-mono text-[15px] font-semibold text-amber tabular-nums">{{ "%.1f"|format(item.score) }}</span>
           <span class="font-mono text-[11px] uppercase tracking-wider {{ srchue.get(item.source_bucket,'text-muted') }}">{{ item.source_label }}</span>
           <span class="font-mono text-[11px] text-faint">{{ item.date_str }}</span>

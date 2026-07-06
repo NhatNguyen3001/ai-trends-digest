@@ -15,7 +15,8 @@ class ItemView:
     source_bucket: str          # "arxiv" | "news" | "repo"
     date_str: str
     score: float
-    score_pct: int              # 0..100, drives the meter width
+    score_pct: int              # 0..100 (kept for reference)
+    score_pips: int             # 0..10 lit segments, score rounded to nearest
     reason: str
     summary: str
     tags: list                  # list[{"name","type"}]
@@ -65,6 +66,7 @@ def build_view(data: dict) -> DigestView:
             date_str=_date_only(it.published),
             score=it.score,
             score_pct=round((it.score or 0) / 10 * 100),
+            score_pips=max(0, min(10, int((it.score or 0) + 0.5))),  # round half up, 0..10
             reason=it.score_reason or "",
             summary=summary,
             tags=[{"name": t.name, "type": t.type} for t in (it.tags or [])],

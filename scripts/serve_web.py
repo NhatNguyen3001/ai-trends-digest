@@ -13,4 +13,7 @@ os.environ["PYTHONPATH"] = str(SRC) + os.pathsep + os.environ.get("PYTHONPATH", 
 import uvicorn  # noqa: E402 (after path setup)
 
 if __name__ == "__main__":
-    uvicorn.run("digest.web.app:app", host="127.0.0.1", port=8000, reload=True)
+    # reload=False on purpose: reload spawns worker subprocesses that can orphan the
+    # port's socket if killed abruptly. A single process starts and stops cleanly.
+    # Restart the server yourself to pick up code/template/CSS changes.
+    uvicorn.run("digest.web.app:app", host="127.0.0.1", port=8000, reload=False)

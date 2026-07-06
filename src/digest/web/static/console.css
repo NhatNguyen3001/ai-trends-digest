@@ -24,9 +24,9 @@ body{background:var(--housing); color:var(--ink);}
 .mast-scan::after{content:""; position:absolute; inset:0; pointer-events:none; opacity:var(--scan-opacity);
   background:repeating-linear-gradient(0deg, rgba(224,163,78,.05) 0 1px, transparent 1px 3px);}
 .mast-title{color:var(--amber); text-shadow:var(--title-shadow);}
-/* signature: the score meter */
-.meter{position:relative; width:150px; height:13px; background:var(--panel-2); border:1px solid var(--hairline); overflow:hidden; flex:0 0 auto;}
-.meter .fill{position:absolute; left:0; top:0; bottom:0; background:linear-gradient(90deg, var(--signal-lo), var(--meter-hi)); background-size:150px 100%; background-repeat:no-repeat; box-shadow:var(--meter-glow);}
-.meter::after{content:""; position:absolute; inset:0; pointer-events:none; background:repeating-linear-gradient(90deg, transparent 0 6px, var(--housing) 6px 7px);}
-@media (max-width:560px){ .meter{width:110px;} .meter .fill{background-size:110px 100%;} }
+/* signature: the score pips — a 10-segment signal-strength readout */
+.pips{display:flex; gap:3px; flex:0 0 auto;}
+.pip{width:8px; height:14px; background:var(--panel-2); border:1px solid var(--hairline);}
+.pip.on{background:var(--amber); border-color:var(--amber); box-shadow:var(--meter-glow);}
+@media (max-width:560px){ .pip{width:6px; height:12px;} }
 @media (prefers-reduced-motion:reduce){ *{transition:none !important;} }
