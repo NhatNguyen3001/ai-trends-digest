@@ -40,18 +40,20 @@ def _result_text(result) -> str:
             f"{rating} ({result.num_reviews} reviews).")
 
 
+_INSTRUCTION = (
+    'Assess the peer-review significance of this paper:\n\n"{title}"\n\n'
+    "Use the lookup_openreview tool, then state in ONE sentence whether it was "
+    "peer-reviewed/accepted and at what venue (include the rating if available), "
+    "or that no peer-review record was found. Be concrete; do not speculate "
+    "beyond the tool result. "
+    "Do not use em dashes anywhere in your output; use commas, colons, or separate "
+    "sentences instead."
+)
+
+
 def _significance_note(title, *, client, lookup_fn) -> str:
     """Run the tool-use loop for one title; return Claude's one-sentence note."""
-    messages = [{
-        "role": "user",
-        "content": (
-            f'Assess the peer-review significance of this paper:\n\n"{title}"\n\n'
-            "Use the lookup_openreview tool, then state in ONE sentence whether it was "
-            "peer-reviewed/accepted and at what venue (include the rating if available), "
-            "or that no peer-review record was found. Be concrete; do not speculate "
-            "beyond the tool result."
-        ),
-    }]
+    messages = [{"role": "user", "content": _INSTRUCTION.format(title=title)}]
 
     for _ in range(3):  # loop guard
         response = client.messages.create(

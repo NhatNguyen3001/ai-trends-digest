@@ -84,7 +84,9 @@ def main() -> None:
         print(f"wrote {path}")
         # Sidecar: the render inputs, so `scripts/deep_dive.py` can deepen an item
         # later without re-running the pipeline. Best-effort — never lose the run.
-        save_digest_data(path.with_suffix(".json"), items, summaries, intro, run_dt)
+        stats = {"raw": raw_count, "curated": len(curated),
+                 "delivered": len(items), "floor": config.SCORE_FLOOR}
+        save_digest_data(path.with_suffix(".json"), items, summaries, intro, run_dt, stats=stats)
     except Exception as exc:  # noqa: BLE001 — digest already printed; don't lose the run
         print(f"[run] could not write digest file ({exc}); printed above only.",
               file=sys.stderr)

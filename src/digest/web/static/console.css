@@ -1,0 +1,32 @@
+/* Palette as custom properties; the whole theme swaps on one [data-theme] flip. */
+:root, [data-theme="dark"]{
+  --housing:#0C0F14; --panel:#141A22; --panel-2:#10151C; --hairline:#232C38;
+  --ink:#E6EDF3; --muted:#7E8CA0; --faint:#4A566A;
+  --signal-lo:#5B8CA6; --meter-hi:#E0A34E; --amber:#E0A34E; --amber-dim:#8A6A34;
+  --src-arxiv:#A6789B; --src-repo:#6E9E7E; --src-news:#8FA0BC;
+  --t-model:#A6789B; --t-org:#6E9E7E; --t-technique:#7E97C0; --t-dataset:#C08A6E; --t-task:#9A8BC0;
+  --prose:#C7D0DC; --intro-ink:#D3DBE6; --tagval:#C7D0DC;
+  --mast-bg:linear-gradient(180deg,#0E1219,#0C0F14);
+  --title-shadow:0 0 14px rgba(224,163,78,.35); --meter-glow:0 0 10px rgba(224,163,78,.28); --scan-opacity:.35;
+}
+[data-theme="light"]{
+  --housing:#EDF0F4; --panel:#FBFCFE; --panel-2:#E4E9F0; --hairline:#D3DAE4;
+  --ink:#161B22; --muted:#57616F; --faint:#93A0B2;
+  --signal-lo:#3E6E8C; --meter-hi:#D98E2A; --amber:#B0741C; --amber-dim:#C99A45;
+  --src-arxiv:#8A5C7E; --src-repo:#4E7E5E; --src-news:#5A6E92;
+  --t-model:#8A5C7E; --t-org:#4E7E5E; --t-technique:#4E6BA0; --t-dataset:#A5663F; --t-task:#6E5CA0;
+  --prose:#2E3742; --intro-ink:#242C36; --tagval:#333B47;
+  --mast-bg:linear-gradient(180deg,#FFFFFF,#EDF0F4);
+  --title-shadow:none; --meter-glow:none; --scan-opacity:0;
+}
+body{background:var(--housing); color:var(--ink);}
+.mast{background:var(--mast-bg);}
+.mast-scan::after{content:""; position:absolute; inset:0; pointer-events:none; opacity:var(--scan-opacity);
+  background:repeating-linear-gradient(0deg, rgba(224,163,78,.05) 0 1px, transparent 1px 3px);}
+.mast-title{color:var(--amber); text-shadow:var(--title-shadow);}
+/* signature: the score meter */
+.meter{position:relative; width:150px; height:13px; background:var(--panel-2); border:1px solid var(--hairline); overflow:hidden; flex:0 0 auto;}
+.meter .fill{position:absolute; left:0; top:0; bottom:0; background:linear-gradient(90deg, var(--signal-lo), var(--meter-hi)); background-size:150px 100%; background-repeat:no-repeat; box-shadow:var(--meter-glow);}
+.meter::after{content:""; position:absolute; inset:0; pointer-events:none; background:repeating-linear-gradient(90deg, transparent 0 6px, var(--housing) 6px 7px);}
+@media (max-width:560px){ .meter{width:110px;} .meter .fill{background-size:110px 100%;} }
+@media (prefers-reduced-motion:reduce){ *{transition:none !important;} }

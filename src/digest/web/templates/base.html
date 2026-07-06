@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI Trends Digest{% if view %} · {{ view.date_str }}{% endif %}</title>
+  <script>
+    // Dark default, no flash: set data-theme before paint from saved choice (else dark).
+    (function(){ try{ var t=localStorage.getItem('theme')||'dark';
+      document.documentElement.setAttribute('data-theme', t);}catch(e){} })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: {
+        colors: {
+          housing:'var(--housing)', panel:'var(--panel)', 'panel-2':'var(--panel-2)',
+          hairline:'var(--hairline)', ink:'var(--ink)', muted:'var(--muted)', faint:'var(--faint)',
+          amber:'var(--amber)', 'amber-dim':'var(--amber-dim)',
+          'src-arxiv':'var(--src-arxiv)', 'src-repo':'var(--src-repo)', 'src-news':'var(--src-news)',
+          't-model':'var(--t-model)', 't-org':'var(--t-org)', 't-technique':'var(--t-technique)',
+          't-dataset':'var(--t-dataset)', 't-task':'var(--t-task)',
+          prose:'var(--prose)', 'intro-ink':'var(--intro-ink)', tagval:'var(--tagval)',
+        },
+        fontFamily: {
+          mono:['"IBM Plex Mono"','ui-monospace','monospace'],
+          sans:['"IBM Plex Sans"','system-ui','sans-serif'],
+        },
+      } },
+    };
+  </script>
+  <link rel="stylesheet" href="/static/console.css">
+</head>
+<body class="font-sans">
+  {% block body %}{% endblock %}
+  <script>
+    (function(){
+      var root=document.documentElement, btn=document.getElementById('themeBtn');
+      if(!btn) return;
+      function label(t){ btn.textContent = (t==='dark' ? '☀ light' : '☾ dark'); }
+      function cur(){ return root.getAttribute('data-theme') || 'dark'; }
+      label(cur());
+      btn.addEventListener('click', function(){
+        var next = cur()==='dark' ? 'light' : 'dark';
+        root.setAttribute('data-theme', next); label(next);
+        try{ localStorage.setItem('theme', next);}catch(e){}
+      });
+    })();
+  </script>
+</body>
+</html>

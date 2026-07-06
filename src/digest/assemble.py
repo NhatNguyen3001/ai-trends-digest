@@ -31,7 +31,9 @@ _INTRO_SYSTEM = (
     "You write the one-paragraph opener for a daily AI-trends digest read by an AI "
     "engineer who follows LLMs, agents, and RAG. Given today's top items, write 2-3 "
     "plain-English sentences on what stands out today. Be concrete, no hype, no lists, "
-    "no markdown — just the paragraph."
+    "no markdown, just the paragraph. "
+    "Do not use em dashes anywhere in your output; use commas, colons, or separate "
+    "sentences instead."
 )
 
 
@@ -175,12 +177,15 @@ def _item_from_dict(d: dict) -> Item:
     )
 
 
-def save_digest_data(path, items: list[Item], summaries, intro: str, run_dt) -> None:
+def save_digest_data(path, items: list[Item], summaries, intro: str, run_dt, stats=None) -> None:
     """Write a JSON sidecar of everything the digest was rendered from.
 
     The on-demand deep-dive (``scripts/deep_dive.py``) reloads this so it can
     re-render the digest with a chosen item's deep-dive filled in, without
     re-running the whole collect/curate/rank pipeline.
+
+    ``stats`` (optional) records the run funnel — {raw, curated, delivered, floor} —
+    so the web page's masthead can show it without recomputing.
     """
     payload = {
         "items": [_item_to_dict(it) for it in items],
@@ -188,6 +193,8 @@ def save_digest_data(path, items: list[Item], summaries, intro: str, run_dt) -> 
         "intro": intro,
         "run_at": run_dt.isoformat(),
     }
+    if stats is not None:
+        payload["stats"] = stats
     Path(path).write_text(json.dumps(payload, ensure_ascii=False, indent=2),
                           encoding="utf-8")
 
@@ -203,6 +210,7 @@ def load_digest_data(path) -> dict:
         "summaries": raw["summaries"],
         "intro": raw.get("intro", ""),
         "run_at": raw.get("run_at", ""),
+        "stats": raw.get("stats", {}),
     }
 
 
