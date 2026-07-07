@@ -30,3 +30,6 @@ body{background:var(--housing); color:var(--ink);}
 .pip.on{background:var(--amber); border-color:var(--amber); box-shadow:var(--meter-glow);}
 @media (max-width:560px){ .pip{width:6px; height:12px;} }
 @media (prefers-reduced-motion:reduce){ *{transition:none !important;} }
+
+/* Slice 2: archive rows keep the row background transition consistent with cards */
+main a.block { transition: background-color .12s ease, color .12s ease; }

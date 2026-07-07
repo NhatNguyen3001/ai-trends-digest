@@ -34,6 +34,16 @@ class DigestView:
     related: list               # list[(tag_name, [indices])]
 
 
+@dataclass
+class ArchiveRow:
+    stamp: str
+    date_str: str
+    time_str: str
+    delivered: int
+    source_counts: list          # list[(bucket, count)]
+    intro_snippet: str
+
+
 def _bucket(source: str) -> str:
     s = (source or "").lower()
     if s == "arxiv":
@@ -101,4 +111,36 @@ def build_view(data: dict) -> DigestView:
         intro=data.get("intro", ""),
         items=item_views,
         related=related,
+    )
+
+
+def parse_stamp(stem: str) -> tuple[str, str]:
+    """'2026-07-07_16-11-00' -> ('2026-07-07', '16:11'). Malformed -> (stem, '')."""
+    try:
+        date_part, time_part = stem.split("_", 1)
+        hh, mm, _ss = time_part.split("-", 2)
+        return date_part, f"{hh}:{mm}"
+    except ValueError:
+        return stem, ""
+
+
+def _snippet(text: str, limit: int = 120) -> str:
+    text = (text or "").strip()
+    if len(text) <= limit:
+        return text
+    cut = text[:limit].rsplit(" ", 1)[0].rstrip()   # break on a word boundary
+    return f"{cut}..."
+
+
+def build_archive_row(stamp: str, data: dict) -> ArchiveRow:
+    """Reuse build_view (no bucket/count logic duplicated) + stamp-derived date/time."""
+    view = build_view(data)
+    date_str, time_str = parse_stamp(stamp)
+    return ArchiveRow(
+        stamp=stamp,
+        date_str=date_str,
+        time_str=time_str,
+        delivered=view.stats.get("delivered") or len(view.items),
+        source_counts=view.source_counts,
+        intro_snippet=_snippet(view.intro),
     )
