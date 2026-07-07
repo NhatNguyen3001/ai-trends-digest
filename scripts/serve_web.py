@@ -16,4 +16,6 @@ if __name__ == "__main__":
     # reload=False on purpose: reload spawns worker subprocesses that can orphan the
     # port's socket if killed abruptly. A single process starts and stops cleanly.
     # Restart the server yourself to pick up code/template/CSS changes.
-    uvicorn.run("digest.web.app:app", host="127.0.0.1", port=8000, reload=False)
+    host = os.environ.get("HOST", "127.0.0.1")   # 0.0.0.0 in the container so the mapped port is reachable
+    port = int(os.environ.get("PORT", "8000"))
+    uvicorn.run("digest.web.app:app", host=host, port=port, reload=False)

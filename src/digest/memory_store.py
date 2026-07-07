@@ -36,14 +36,25 @@ class Hit:
     payload: dict
 
 
-def get_store(path: str | None = None, dim: int | None = None) -> QdrantClient:
-    """Open the store (on-disk at ``path``, or in-memory when None) and ensure the
-    collection exists with the right vector size + cosine distance.
+def get_store(path: str | None = None, dim: int | None = None,
+              url: str | None = None) -> QdrantClient:
+    """Open the store and ensure the collection exists (right vector size + cosine).
+
+    Precedence: an explicit/config ``url`` (Qdrant server) > ``path`` (embedded on-disk) >
+    ``:memory:``. ``url`` defaults to ``config.QDRANT_URL`` so a container's env selects the
+    service while local runs (empty URL) keep the embedded behaviour.
 
     ``dim`` defaults to the production embedding size; tests pass a small value to
     keep fixtures readable.
     """
-    client = QdrantClient(path=path) if path else QdrantClient(":memory:")
+    if url is None:
+        url = config.QDRANT_URL
+    if url:
+        client = QdrantClient(url=url)
+    elif path:
+        client = QdrantClient(path=path)
+    else:
+        client = QdrantClient(":memory:")
     names = {c.name for c in client.get_collections().collections}
     if _COLLECTION not in names:
         client.create_collection(
