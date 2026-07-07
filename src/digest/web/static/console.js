@@ -22,6 +22,20 @@ document.addEventListener('DOMContentLoaded', function () {
         pin.innerHTML = data.pinned ? '★ saved' : '☆ save';
         pin.classList.toggle('text-amber', data.pinned);
         pin.classList.toggle('text-muted', !data.pinned);
+        if (!data.pinned && document.querySelector('[data-page="saved"]')) {
+          var card = pin.closest('article');
+          if (card) {
+            card.classList.add('removing');
+            setTimeout(function () {
+              card.remove();
+              var count = document.getElementById('savedCount');
+              var left = document.querySelectorAll('main[data-page="saved"] article').length;
+              if (count) count.textContent = 'saved · ' + left;
+              var empty = document.getElementById('savedEmpty');
+              if (empty && left === 0) empty.hidden = false;
+            }, 250);
+          }
+        }
       } catch (err) {
         var pn = document.createElement('span');
         pn.className = 'deepdive-error';
@@ -37,7 +51,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var url = '/d/' + btn.dataset.stamp + '/deepdive/' + btn.dataset.index;
     var prev = btn.textContent;
     btn.disabled = true;
-    btn.textContent = 'researching...';
+    btn.innerHTML = 'researching<span class="dots"></span>';
     try {
       var resp = await fetch(url, { method: 'POST' });
       if (!resp.ok) throw new Error('status ' + resp.status);
@@ -52,4 +66,21 @@ document.addEventListener('DOMContentLoaded', function () {
       setTimeout(function () { note.remove(); }, 4000);
     }
   });
+
+  // Live search filter on Saved / Archive.
+  var box = document.getElementById('searchBox');
+  if (box) {
+    var noMatches = document.getElementById('noMatches');
+    box.addEventListener('input', function () {
+      var q = box.value.trim().toLowerCase();
+      var items = document.querySelectorAll('[data-search]');
+      var shown = 0;
+      items.forEach(function (el) {
+        var hit = !q || (el.getAttribute('data-search') || '').indexOf(q) !== -1;
+        el.hidden = !hit;
+        if (hit) shown++;
+      });
+      if (noMatches) noMatches.hidden = shown !== 0;
+    });
+  }
 });

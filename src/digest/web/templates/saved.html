@@ -15,7 +15,13 @@
   </div>
 </header>
 
-<main class="max-w-[820px] mx-auto px-5 pb-20">
+<main data-page="saved" class="max-w-[820px] mx-auto px-5 pb-20">
+  <div class="flex items-center justify-between gap-4 mt-6 mb-1">
+    <span id="savedCount" class="font-mono text-[10.5px] tracking-[0.22em] uppercase text-muted">saved &middot; {{ view.items|length }}</span>
+    <input id="searchBox" type="search" placeholder="search saved..." autocomplete="off"
+           class="font-mono text-[12px] bg-panel border border-hairline px-2.5 py-1.5 text-ink placeholder:text-faint focus:outline-none focus:border-amber w-48 max-w-[50%]">
+  </div>
+  <p id="noMatches" hidden class="font-mono text-muted text-center py-16">No matches.</p>
   {% if facets.types or facets.tags or facets.sources %}
   <div class="saved-filter flex flex-wrap items-center gap-x-3 gap-y-2 mt-6 font-mono text-[11px]">
     <a href="/saved" class="{% if not active.type and not active.tag and not active.source %}text-amber{% else %}text-muted hover:text-amber{% endif %}">all</a>
@@ -25,12 +31,9 @@
   </div>
   {% endif %}
 
-  {% if not view.items %}
-  <p class="font-mono text-muted text-center py-24">Nothing saved yet. Click <span class="text-amber">&#9734; save</span> on an item.</p>
-  {% else %}
+  <p id="savedEmpty" {% if view.items %}hidden{% endif %} class="font-mono text-muted text-center py-24">Nothing saved yet. Click <span class="text-amber">&#9734; save</span> on an item.</p>
   {% for item in view.items %}
   {% include "_item_card.html" %}
   {% endfor %}
-  {% endif %}
 </main>
 {% endblock %}

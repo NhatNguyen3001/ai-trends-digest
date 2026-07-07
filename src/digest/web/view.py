@@ -22,6 +22,13 @@ def render_markdown(md: str) -> str:
     return _MD.render(md)
 
 
+def render_inline_markdown(md: str) -> str:
+    """Inline markdown -> safe HTML with no <p> wrapper ('' -> '')."""
+    if not md:
+        return ""
+    return _MD.renderInline(md)
+
+
 @dataclass
 class ItemView:
     index: int
@@ -37,6 +44,8 @@ class ItemView:
     summary: str
     tags: list                  # list[{"name","type"}]
     significance: str | None
+    significance_html: str       # inline-rendered significance ('' when none)
+    reason_html: str             # inline-rendered score reason ('' when none)
     deep_dive_html: str          # rendered HTML of the deep-dive write-up ('' when none)
     pin_key: str                 # sha1(url) — the saved/pin identity
 
@@ -99,6 +108,8 @@ def build_view(data: dict) -> DigestView:
             summary=summary,
             tags=[{"name": t.name, "type": t.type} for t in (it.tags or [])],
             significance=it.significance_note or None,
+            significance_html=render_inline_markdown(it.significance_note or ""),
+            reason_html=render_inline_markdown(it.score_reason or ""),
             deep_dive_html=render_markdown(getattr(it, "deep_dive", "") or ""),
             pin_key=_pin_key(it.url),
         ))
