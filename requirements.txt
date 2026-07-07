@@ -16,6 +16,7 @@ tavily-python>=0.5,<1.0   # Web-search API for the deep-dive retrieval (Phase 5)
 fastapi>=0.110,<1.0       # Async web framework serving the digest page
 uvicorn[standard]>=0.27,<1.0  # ASGI server that runs the FastAPI app
 jinja2>=3.1,<4.0          # HTML templating for the digest page
+markdown-it-py>=3.0,<4.0  # Render the deep-dive markdown write-up to safe HTML (Phase 7 slice 3)
 
 # --- Dev / test ---
 pytest>=8.0,<10.0         # Test runner (Phase 3: first tests in the project)

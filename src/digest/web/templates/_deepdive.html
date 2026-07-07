@@ -1,0 +1,8 @@
+<div class="deepdive-panel mt-3 p-4 bg-panel border border-hairline border-l-2 border-l-amber-dim">
+  <div class="font-mono text-[10.5px] tracking-[0.22em] uppercase text-amber mb-2.5">Deep-dive</div>
+  {% if item.deep_dive_html %}
+  <div class="deepdive-prose text-[14px] text-prose max-w-[68ch]">{{ item.deep_dive_html | safe }}</div>
+  {% else %}
+  <p class="font-mono text-[11.5px] text-muted">No additional detail found.</p>
+  {% endif %}
+</div>

@@ -33,3 +33,16 @@ body{background:var(--housing); color:var(--ink);}
 
 /* Slice 2: archive rows keep the row background transition consistent with cards */
 main a.block { transition: background-color .12s ease, color .12s ease; }
+
+/* Slice 3: deep-dive markdown panel (Tailwind resets strip tag styling, so restore it) */
+.deepdive-prose h1, .deepdive-prose h2, .deepdive-prose h3 { font-family:"IBM Plex Sans",system-ui,sans-serif; font-weight:600; line-height:1.3; margin:.9em 0 .35em; color:var(--ink); }
+.deepdive-prose h2 { font-size:1.02rem; }
+.deepdive-prose h3 { font-size:.94rem; }
+.deepdive-prose p { margin:.5em 0; }
+.deepdive-prose ul, .deepdive-prose ol { margin:.4em 0 .6em 1.1em; }
+.deepdive-prose li { margin:.2em 0; list-style:disc; }
+.deepdive-prose ol li { list-style:decimal; }
+.deepdive-prose a { color:var(--amber); border-bottom:1px solid transparent; }
+.deepdive-prose a:hover { border-bottom-color:var(--amber); }
+.deepdive-prose code { font-family:"IBM Plex Mono",monospace; font-size:.85em; background:var(--panel-2); padding:.05em .3em; border-radius:2px; }
+.deepdive-error { font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--amber); }

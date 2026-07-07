@@ -1,9 +1,11 @@
 """Find and load digest sidecars off disk, as view models."""
 import logging
+from datetime import datetime
 from pathlib import Path
 
 from digest import config
-from digest.assemble import load_digest_data
+from digest.assemble import load_digest_data, save_digest_data
+from digest.deepdive.engine import deep_dive
 from digest.web.view import build_view, build_archive_row, ArchiveRow, DigestView
 
 _log = logging.getLogger(__name__)
@@ -57,3 +59,32 @@ def load_archive(dirpath=None) -> list[ArchiveRow]:
 
 def load_view_model(path) -> DigestView:
     return build_view(load_digest_data(path))
+
+
+def run_item_deepdive(stamp, index, dirpath=None, dive_fn=None):
+    """Run (or serve cached) the deep-dive for item #index (1-based) of a digest.
+
+    Returns the item's ItemView with deep_dive_html populated, or None if the stamp
+    or index does not resolve. dive_fn defaults to the real engine; injected in tests.
+    """
+    if dive_fn is None:
+        dive_fn = deep_dive
+    path = digest_path_for(stamp, dirpath)
+    if path is None:
+        return None
+    data = load_digest_data(path)
+    items = data["items"]
+    if not (1 <= index <= len(items)):
+        return None
+    item = items[index - 1]
+    if not item.deep_dive:                       # empty/missing -> run; non-empty -> cached
+        item.deep_dive = dive_fn(item) or ""
+        if item.deep_dive:                       # persist only a real result
+            try:
+                run_at = data.get("run_at", "")
+                run_dt = datetime.fromisoformat(run_at) if run_at else datetime.now()
+                save_digest_data(path, items, data["summaries"], data.get("intro", ""),
+                                 run_dt, stats=data.get("stats"))
+            except Exception as e:               # noqa: BLE001 - persist is best-effort
+                _log.warning("could not persist deep-dive for %s #%s: %s", stamp, index, e)
+    return build_view(data).items[index - 1]

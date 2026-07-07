@@ -5,6 +5,17 @@ stays unit-testable with no disk or network.
 """
 from dataclasses import dataclass
 
+from markdown_it import MarkdownIt
+
+_MD = MarkdownIt("commonmark", {"html": False})   # html off -> raw HTML escaped (XSS-safe)
+
+
+def render_markdown(md: str) -> str:
+    """Deep-dive markdown write-up -> safe HTML ('' -> '')."""
+    if not md:
+        return ""
+    return _MD.render(md)
+
 
 @dataclass
 class ItemView:
@@ -21,6 +32,7 @@ class ItemView:
     summary: str
     tags: list                  # list[{"name","type"}]
     significance: str | None
+    deep_dive_html: str          # rendered HTML of the deep-dive write-up ('' when none)
 
 
 @dataclass
@@ -81,6 +93,7 @@ def build_view(data: dict) -> DigestView:
             summary=summary,
             tags=[{"name": t.name, "type": t.type} for t in (it.tags or [])],
             significance=it.significance_note or None,
+            deep_dive_html=render_markdown(getattr(it, "deep_dive", "") or ""),
         ))
 
     # source counts by bucket, stable order

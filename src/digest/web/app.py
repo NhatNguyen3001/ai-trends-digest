@@ -8,6 +8,7 @@ from fastapi.templating import Jinja2Templates
 
 from digest.web.loader import (
     latest_digest_path, digest_path_for, neighbors, load_archive, load_view_model,
+    run_item_deepdive,
 )
 
 _HERE = Path(__file__).parent
@@ -17,13 +18,13 @@ templates = Jinja2Templates(directory=str(_HERE / "templates"))
 
 
 def _digest_response(request: Request, path, stamp):
-    """Shared render for '/' and '/d/{stamp}': view + newer/older nav."""
+    """Shared render for '/' and '/d/{stamp}': view + newer/older nav + stamp for buttons."""
     view = None if path is None else load_view_model(path)
     newer, older = neighbors(stamp) if stamp else (None, None)
     # Starlette >=0.29 signature: (request, name, context).
     return templates.TemplateResponse(
         request, "digest.html",
-        {"view": view, "nav": {"newer": newer, "older": older}},
+        {"view": view, "nav": {"newer": newer, "older": older}, "stamp": stamp},
     )
 
 
@@ -47,3 +48,11 @@ def permalink(request: Request, stamp: str):
             request, "not_found.html", {"stamp": stamp}, status_code=404,
         )
     return _digest_response(request, path, stamp)
+
+
+@app.post("/d/{stamp}/deepdive/{index}", response_class=HTMLResponse)
+def deepdive(request: Request, stamp: str, index: int):
+    item = run_item_deepdive(stamp, index)
+    if item is None:
+        return HTMLResponse("not found", status_code=404)
+    return templates.TemplateResponse(request, "_deepdive.html", {"item": item})

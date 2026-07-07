@@ -68,6 +68,14 @@
         </div>
         {% endif %}
         {% if item.significance %}<div class="flex gap-2 mt-3 font-mono text-[11px] text-faint max-w-[64ch]"><span class="text-muted">&#9432;</span><span>{{ item.significance }}</span></div>{% endif %}
+        <div class="deepdive-slot mt-3">
+          {% if item.deep_dive_html %}
+            {% include "_deepdive.html" %}
+          {% else %}
+          <button class="deepdive-btn font-mono text-[11px] uppercase tracking-wider text-muted bg-panel border border-hairline px-2.5 py-1.5 cursor-pointer hover:text-amber"
+                  data-stamp="{{ stamp }}" data-index="{{ item.index }}">&#9662; deep-dive</button>
+          {% endif %}
+        </div>
       </div>
     </article>
     {% endfor %}
