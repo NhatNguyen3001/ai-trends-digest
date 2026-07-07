@@ -73,6 +73,9 @@ SCORE_FLOOR = float(os.environ.get("SCORE_FLOOR", "4.0"))  # min blended score t
 # --- Digest assembly (Phase 4) ---
 DIGEST_DIR = os.environ.get("DIGEST_DIR", "./digests")   # where daily .md files are written
 
+# --- Saved / pins (Phase 7 slice 4) ---
+PINS_PATH = os.environ.get("PINS_PATH", "./data/pins.json")  # saved/read-later library (git-ignored)
+
 # --- Observability (Phase 6 harness hardening) ---
 LOG_DIR = os.environ.get("LOG_DIR", "./logs")     # per-run .log files (git-ignored)
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")

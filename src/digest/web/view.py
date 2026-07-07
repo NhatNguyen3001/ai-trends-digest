@@ -3,9 +3,14 @@
 All join/format/derive logic lives here so the Jinja template stays dumb and this
 stays unit-testable with no disk or network.
 """
+import logging
 from dataclasses import dataclass
 
 from markdown_it import MarkdownIt
+
+from digest.pins import pin_key as _pin_key
+
+_log = logging.getLogger(__name__)
 
 _MD = MarkdownIt("commonmark", {"html": False})   # html off -> raw HTML escaped (XSS-safe)
 
@@ -33,6 +38,7 @@ class ItemView:
     tags: list                  # list[{"name","type"}]
     significance: str | None
     deep_dive_html: str          # rendered HTML of the deep-dive write-up ('' when none)
+    pin_key: str                 # sha1(url) — the saved/pin identity
 
 
 @dataclass
@@ -94,6 +100,7 @@ def build_view(data: dict) -> DigestView:
             tags=[{"name": t.name, "type": t.type} for t in (it.tags or [])],
             significance=it.significance_note or None,
             deep_dive_html=render_markdown(getattr(it, "deep_dive", "") or ""),
+            pin_key=_pin_key(it.url),
         ))
 
     # source counts by bucket, stable order
@@ -157,3 +164,17 @@ def build_archive_row(stamp: str, data: dict) -> ArchiveRow:
         source_counts=view.source_counts,
         intro_snippet=_snippet(view.intro),
     )
+
+
+def build_saved_view(pins: list) -> DigestView:
+    """Build a DigestView from pin snapshots (reuses build_view). Skips malformed records."""
+    from digest.assemble import _item_from_dict
+    items, summaries = [], []
+    for rec in pins:
+        try:
+            items.append(_item_from_dict(rec["item"]))
+            summaries.append(rec.get("summary", ""))
+        except Exception as e:                            # noqa: BLE001
+            _log.warning("skipping malformed pin %s: %s", rec.get("key"), e)
+    return build_view({"items": items, "summaries": summaries, "intro": "",
+                       "run_at": "", "stats": {}})

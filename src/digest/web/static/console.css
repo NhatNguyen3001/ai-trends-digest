@@ -46,3 +46,8 @@ main a.block { transition: background-color .12s ease, color .12s ease; }
 .deepdive-prose a:hover { border-bottom-color:var(--amber); }
 .deepdive-prose code { font-family:"IBM Plex Mono",monospace; font-size:.85em; background:var(--panel-2); padding:.05em .3em; border-radius:2px; }
 .deepdive-error { font-family:"IBM Plex Mono",monospace; font-size:11px; color:var(--amber); }
+
+/* Slice 4: pin toggle + saved filter bar */
+.pin-btn { background: none; border: none; padding: 0; }
+.saved-filter a { border-bottom: 1px solid transparent; }
+.saved-filter a:hover { border-bottom-color: var(--amber); }

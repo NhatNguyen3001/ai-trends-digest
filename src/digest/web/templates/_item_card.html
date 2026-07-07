@@ -1,0 +1,36 @@
+<article class="grid grid-cols-[34px_1fr] gap-x-4 py-5 border-t border-hairline">
+  <div class="font-mono text-xs text-faint pt-1 tabular-nums">{{ "%02d"|format(item.index) }}</div>
+  <div>
+    <div class="flex flex-wrap items-center gap-x-3.5 gap-y-2.5 mb-2">
+      <div class="pips">{% for i in range(10) %}<i class="pip{% if i < item.score_pips %} on{% endif %}"></i>{% endfor %}</div>
+      <span class="font-mono text-[15px] font-semibold text-amber tabular-nums">{{ "%.1f"|format(item.score) }}</span>
+      <span class="font-mono text-[11px] uppercase tracking-wider {{ srchue.get(item.source_bucket,'text-muted') }}">{{ item.source_label }}</span>
+      <span class="font-mono text-[11px] text-faint">{{ item.date_str }}</span>
+      {% set is_pinned = item.pin_key in (pinned or []) %}
+      <button class="pin-btn font-mono text-[11px] uppercase tracking-wider ml-auto cursor-pointer {% if is_pinned %}text-amber{% else %}text-muted hover:text-amber{% endif %}"
+              data-key="{{ item.pin_key }}" data-stamp="{{ stamp or '' }}" data-index="{{ item.index }}"
+              data-pinned="{{ 'true' if is_pinned else 'false' }}">{% if is_pinned %}&#9733; saved{% else %}&#9734; save{% endif %}</button>
+    </div>
+    <h2 class="text-lg font-semibold leading-snug text-balance"><a href="{{ item.url }}" class="text-ink hover:text-amber border-b border-transparent hover:border-amber">{{ item.title }}</a></h2>
+    {% if item.reason %}<div class="font-mono text-[11.5px] text-muted mt-2 pl-3 border-l border-hairline max-w-[64ch]">{{ item.reason }}</div>{% endif %}
+    <p class="mt-3 text-prose max-w-[64ch] text-[14.5px]">{{ item.summary }}</p>
+    {% if item.tags %}
+    <div class="flex flex-wrap gap-1.5 mt-3">
+      {% for tag in item.tags %}
+      <span class="font-mono text-[10.5px] text-muted bg-panel-2 border border-hairline px-2 py-0.5 inline-flex items-center gap-1.5">
+        <span class="w-1.5 h-1.5 rounded-full {{ taghue.get(tag.type,'bg-muted') }}"></span>{{ tag.type }} <b class="text-tagval font-medium">{{ tag.name }}</b>
+      </span>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% if item.significance %}<div class="flex gap-2 mt-3 font-mono text-[11px] text-faint max-w-[64ch]"><span class="text-muted">&#9432;</span><span>{{ item.significance }}</span></div>{% endif %}
+    <div class="deepdive-slot mt-3">
+      {% if item.deep_dive_html %}
+        {% include "_deepdive.html" %}
+      {% else %}
+      <button class="deepdive-btn font-mono text-[11px] uppercase tracking-wider text-muted bg-panel border border-hairline px-2.5 py-1.5 cursor-pointer hover:text-amber"
+              data-stamp="{{ stamp or '' }}" data-index="{{ item.index }}">&#9662; deep-dive</button>
+      {% endif %}
+    </div>
+  </div>
+</article>

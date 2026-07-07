@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block body %}
+{% set srchue = {"arxiv":"text-src-arxiv","repo":"text-src-repo","news":"text-src-news"} %}
+{% set taghue = {"model":"bg-t-model","org":"bg-t-org","technique":"bg-t-technique","dataset":"bg-t-dataset","task":"bg-t-task"} %}
+<header class="mast mast-scan sticky top-0 z-10 border-b border-hairline">
+  <div class="max-w-[820px] mx-auto px-5 py-3 flex items-center justify-between gap-4 flex-wrap">
+    <div class="mast-title font-mono font-semibold uppercase tracking-[0.16em] text-sm flex items-center gap-2">
+      <span class="text-faint">&#9733;</span> AI Trends <span class="text-faint">/</span> saved
+    </div>
+    <div class="flex items-center gap-4">
+      <a href="/" class="font-mono text-[11px] uppercase tracking-wider text-muted hover:text-amber">latest &rarr;</a>
+      <button id="themeBtn" aria-label="Toggle light or dark theme"
+              class="font-mono text-[11px] uppercase tracking-wider text-muted bg-panel border border-hairline px-2.5 py-1.5 cursor-pointer hover:text-amber">theme</button>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-[820px] mx-auto px-5 pb-20">
+  {% if facets.types or facets.tags or facets.sources %}
+  <div class="saved-filter flex flex-wrap items-center gap-x-3 gap-y-2 mt-6 font-mono text-[11px]">
+    <a href="/saved" class="{% if not active.type and not active.tag and not active.source %}text-amber{% else %}text-muted hover:text-amber{% endif %}">all</a>
+    {% for s in facets.sources %}<a href="/saved?source={{ s }}" class="{% if active.source == s %}text-amber{% else %}text-muted hover:text-amber{% endif %}">{{ s }}</a>{% endfor %}
+    {% for t in facets.types %}<a href="/saved?type={{ t }}" class="{% if active.type == t %}text-amber{% else %}text-muted hover:text-amber{% endif %}">{{ t }}</a>{% endfor %}
+    {% for tg in facets.tags %}<a href="/saved?tag={{ tg }}" class="{% if active.tag == tg %}text-amber{% else %}text-faint hover:text-amber{% endif %}">#{{ tg }}</a>{% endfor %}
+  </div>
+  {% endif %}
+
+  {% if not view.items %}
+  <p class="font-mono text-muted text-center py-24">Nothing saved yet. Click <span class="text-amber">&#9734; save</span> on an item.</p>
+  {% else %}
+  {% for item in view.items %}
+  {% include "_item_card.html" %}
+  {% endfor %}
+  {% endif %}
+</main>
+{% endblock %}
