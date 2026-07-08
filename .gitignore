@@ -35,6 +35,7 @@ logs/
 
 .claude/
 .wolf/
+skills-lock.json
 
 CLAUDE.md
 
