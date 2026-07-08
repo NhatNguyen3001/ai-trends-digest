@@ -56,6 +56,8 @@ def preflight() -> None:
         log.warning("TAVILY_API_KEY not set — deep-dive disabled.")
     if not getattr(config, "LANGSMITH_API_KEY", ""):
         log.warning("LANGSMITH_API_KEY not set — tracing disabled.")
+    if not config.EMAIL_ENABLED:
+        log.warning("email delivery not configured — digest will be saved to file only.")
 
 
 def configure_tracing() -> bool:

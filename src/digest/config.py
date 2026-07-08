@@ -77,6 +77,18 @@ DIGEST_DIR = os.environ.get("DIGEST_DIR", "./digests")   # where daily .md files
 # --- Saved / pins (Phase 7 slice 4) ---
 PINS_PATH = os.environ.get("PINS_PATH", "./data/pins.json")  # saved/read-later library (git-ignored)
 
+# --- Email delivery (Phase 9 sub-project A) ---
+# Gmail locally (needs an APP PASSWORD, not your account password); the same SMTP
+# path points at SES's SMTP endpoint in the cloud — only these values change.
+SMTP_HOST = os.environ.get("SMTP_HOST", "")
+SMTP_PORT = int(os.environ.get("SMTP_PORT", "465"))          # SSL
+SMTP_USER = os.environ.get("SMTP_USER", "")
+SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
+EMAIL_FROM = os.environ.get("EMAIL_FROM", "") or SMTP_USER   # defaults to the SMTP user
+EMAIL_TO = os.environ.get("EMAIL_TO", "")
+# Send only when fully configured; otherwise the run is file-only (as today).
+EMAIL_ENABLED = bool(SMTP_HOST and SMTP_USER and SMTP_PASSWORD and EMAIL_TO)
+
 # --- Observability (Phase 6 harness hardening) ---
 LOG_DIR = os.environ.get("LOG_DIR", "./logs")     # per-run .log files (git-ignored)
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")

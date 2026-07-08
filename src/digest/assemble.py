@@ -102,10 +102,10 @@ def _revisit_section(payloads: list[dict]) -> str:
     if not payloads:
         return ""
     lines = ["## 🔁 Worth revisiting",
-             "_A quiet day for fresh items — a few past picks from the last two weeks:_",
+             "_A quiet day for fresh items. A few past picks from the last two weeks:_",
              ""]
     for p in payloads:
-        lines.append(f"- [{p.get('title', '')}]({p.get('url', '')}) — "
+        lines.append(f"- [{p.get('title', '')}]({p.get('url', '')}) · "
                      f"{p.get('source', '')} · {p.get('date', '')}")
     return "\n".join(lines)
 
@@ -113,7 +113,7 @@ def _revisit_section(payloads: list[dict]) -> str:
 def render_digest(items: list[Item], summaries: list[str], run_date: date,
                   intro: str = "", revisit: list[dict] | None = None) -> str:
     """Build the full daily digest markdown. Pure — no I/O, no network."""
-    parts = [f"# AI Trends Digest — {run_date:%Y-%m-%d}"]
+    parts = [f"# AI Trends Digest · {run_date:%Y-%m-%d}"]
     if intro:
         parts.append(f"_{intro}_")
     parts.append(_source_counts_line(items))

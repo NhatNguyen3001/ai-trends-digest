@@ -27,6 +27,7 @@ from digest.assemble import (  # noqa: E402
 )
 from digest.memory_store import get_store  # noqa: E402
 from digest.summarise import summarise_items  # noqa: E402
+from digest.delivery import deliver_email  # noqa: E402
 from digest import config  # noqa: E402
 
 
@@ -90,6 +91,9 @@ def main() -> None:
     except Exception as exc:  # noqa: BLE001 — digest already printed; don't lose the run
         print(f"[run] could not write digest file ({exc}); printed above only.",
               file=sys.stderr)
+
+    # Deliver (Phase 9A): email the digest. Soft-fails; the file is already saved above.
+    deliver_email(markdown, run_dt.date())
 
     # Delivered-only (Phase 6): remember what the reader saw, not the whole pool.
     remember_kept(items, delivered_vecs, store=store, run_date=date.today())
