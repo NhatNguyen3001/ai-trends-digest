@@ -6,6 +6,11 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app/src \
     HOST=0.0.0.0
 
+# tzdata so a TZ set at deploy time (e.g. TZ=Australia/Sydney) actually resolves —
+# python:3.11-slim ships without it, so date.today() would otherwise stay UTC.
+RUN apt-get update && apt-get install -y --no-install-recommends tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
