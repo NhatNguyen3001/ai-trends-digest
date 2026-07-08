@@ -146,6 +146,9 @@ secrets in **Secrets Manager**, and delivery via **SES**. The web UI is brought 
 short-lived Fargate task (no load balancer, 1-hour auto-stop, IP-scoped). Total AWS cost is about **$2 to $3
 a month**; a NAT Gateway (about $32/mo) and an always-on web plus ALB (about $18/mo) are both designed out.
 
+Full reproducible steps (ECR, SES, Secrets Manager, EFS, IAM, task definition, EventBridge schedule) are in
+**[docs/DEPLOY.md](docs/DEPLOY.md)**.
+
 ---
 
 ## Limitations and what's next
